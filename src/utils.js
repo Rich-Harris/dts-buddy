@@ -35,3 +35,46 @@ export function get_input_files(cwd, include = [], exclude = []) {
 
 	return input.map((file) => path.resolve(file));
 }
+
+export class File {
+	/** @type {string} */
+	#filename;
+
+	/** @type {string} */
+	#contents = '';
+
+	/** @type {Map<number, import('./types').Mapping>} */
+	#mappings = new Map();
+
+	/** @param {string} filename */
+	constructor(filename) {
+		this.#filename = filename;
+	}
+
+	/**
+	 *
+	 * @param {string} string
+	 * @param {*} [mapping]
+	 */
+	append(string, mapping) {
+		this.#mappings.set(this.#contents.length, mapping);
+		this.#contents += string;
+	}
+
+	save() {
+		try {
+			fs.mkdirSync(path.dirname(this.#filename), { recursive: true });
+		} catch {
+			// ignore
+		}
+
+		const comment = `//# sourceMappingURL=${path.basename(this.#filename)}.map`;
+		this.#contents += comment;
+
+		console.log('saving', this.#filename);
+		fs.writeFileSync(this.#filename, this.#contents);
+
+		// TODO generate sourcemap
+		// fs.writeFileSync(`${this.#filename}.map`, JSON.stringify(types.smg, null, '\t'));
+	}
+}

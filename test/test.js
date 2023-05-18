@@ -1,10 +1,16 @@
+import fs from 'node:fs';
 import { createModuleDeclarations } from '../src/index.js';
 
-await createModuleDeclarations({
-	project: 'test/tsconfig.test.json',
-	output: 'test/actual/index.d.ts',
-	modules: {
-		'my-lib': 'test/input/types.d.ts',
-		'my-lib/subpackage': 'test/input/subpackage/index.js'
-	}
-});
+for (const sample of fs.readdirSync('test/samples')) {
+	const dir = `test/samples/${sample}`;
+
+	await createModuleDeclarations({
+		project: `${dir}/tsconfig.json`,
+		ambient: `${dir}/actual/ambient.d.ts`,
+		output: `${dir}/actual/index.d.ts`,
+		modules: {
+			'my-lib': `${dir}/input/types.d.ts`,
+			'my-lib/subpackage': `${dir}/input/subpackage/index.js`
+		}
+	});
+}

@@ -7,6 +7,9 @@ dependencies:
   globrex:
     specifier: ^0.1.2
     version: 0.1.2
+  magic-string:
+    specifier: ^0.30.0
+    version: 0.30.0
   tiny-glob:
     specifier: ^0.2.9
     version: 0.2.9
@@ -79,6 +82,13 @@ packages:
 
   /globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
+    dev: false
+
+  /magic-string@0.30.0:
+    resolution: {integrity: sha512-LA+31JYDJLs82r2ScLrlz1GjSgu66ZV518eyWT+S8VhyQn/JL0u9MeBOvQMGYiPk1DBiSN9DDMOcXvigJZaViQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.15
     dev: false
 
   /tiny-glob@0.2.9:

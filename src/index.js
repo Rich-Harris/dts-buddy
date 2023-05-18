@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
-import glob from 'tiny-glob/sync.js';
-import globrex from 'globrex';
-import { SourceMapConsumer, SourceMapGenerator } from '@jridgewell/source-map';
-import { get_input_files } from './utils.js';
+import MagicString from 'magic-string';
+import { SourceMapConsumer } from '@jridgewell/source-map';
+import { File, get_input_files } from './utils.js';
 
 /**
  * @param {{
@@ -22,7 +21,9 @@ export async function createModuleDeclarations(options) {
 	/** @type {Record<string, string>} */
 	const modules = {};
 	for (const id in options.modules) {
-		modules[id] = path.resolve(options.modules[id]);
+		modules[id] = path
+			.resolve(options.modules[id])
+			.replace(/(\.d\.ts|\.js|\.ts)$/, '.d.ts');
 	}
 
 	const cwd = path.dirname(project);
@@ -52,10 +53,7 @@ export async function createModuleDeclarations(options) {
 	program.emit();
 
 	// TODO generate ambient declarations alongside types
-	const types = {
-		code: '',
-		smg: new SourceMapGenerator({ file: path.basename(output) })
-	};
+	const types = new File(output);
 
 	/**
 	 * @type {Map<string, import('./types').Module>}
@@ -67,25 +65,22 @@ export async function createModuleDeclarations(options) {
 	 * @returns {import('./types').Module}
 	 */
 	function get_dts(file) {
-		const authored = file.endsWith('.d.ts');
-		const dts_file = authored ? file : file.replace(/\.[jt]s$/, '.d.ts');
-		const map_file = authored ? null : dts_file + '.map';
+		const authored = !(file in created);
+		const map_file = authored ? null : file + '.map';
 
-		if (!cache.has(dts_file)) {
-			const source = authored
-				? fs.readFileSync(dts_file, 'utf8')
-				: created[dts_file];
+		if (!cache.has(file)) {
+			const source = authored ? fs.readFileSync(file, 'utf8') : created[file];
 			const map = map_file && created[map_file];
 
 			const ast = ts.createSourceFile(
-				dts_file,
+				file,
 				source,
 				ts.ScriptTarget.Latest,
 				false,
 				ts.ScriptKind.TS
 			);
 
-			cache.set(dts_file, {
+			cache.set(file, {
 				authored,
 				source,
 				ast,
@@ -93,60 +88,159 @@ export async function createModuleDeclarations(options) {
 			});
 		}
 
-		return /** @type {import('./types').Module} */ (cache.get(dts_file));
+		return /** @type {import('./types').Module} */ (cache.get(file));
 	}
 
-	// for (const file in created) {
-	// 	console.log(`\u001B[1m\u001B[35m${file}\u001B[39m\u001B[22m`);
-	// 	console.log(created[file]);
-	// 	console.log('\n');
-	// }
+	/**
+	 * @param {string} from
+	 * @param {string} to
+	 */
+	function resolve_dts(from, to) {
+		const file = path.resolve(path.dirname(from), to);
+		if (file.endsWith('.d.ts')) return file;
+		if (file.endsWith('.ts')) return file.replace(/\.ts$/, '.d.ts');
+		if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
+		return file + '.d.ts';
+	}
+
+	for (const file in created) {
+		console.log(`\u001B[1m\u001B[35m${file}\u001B[39m\u001B[22m`);
+		console.log(created[file]);
+		console.log('\n');
+	}
 
 	for (const id in modules) {
-		types.code += `declare module '${id}' {\n`;
+		types.append(`declare module '${id}' {`);
 
-		const declarations = new Map();
 		const included = new Set([modules[id]]);
 		const modules_to_export_from = new Set([modules[id]]);
 
 		const exports = new Map();
 
 		for (const file of included) {
-			const module = get_dts(path.resolve(file));
+			types.append('\n');
+			const module = get_dts(file);
 			exports.set(file, []);
 
 			ts.forEachChild(module.ast, (node) => {
-				if (
-					ts.isInterfaceDeclaration(node) ||
-					ts.isTypeAliasDeclaration(node) ||
-					ts.isClassDeclaration(node) ||
-					ts.isFunctionDeclaration(node) ||
-					ts.isVariableStatement(node)
-				) {
-					const name = ts.isVariableStatement(node)
-						? ts.getNameOfDeclaration(node.declarationList.declarations[0])
-						: ts.getNameOfDeclaration(node);
+				// follow imports
+				if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+					// TODO handle node_modules as well as relative imports, where specified
+					if (
+						node.moduleSpecifier &&
+						ts.isStringLiteral(node.moduleSpecifier) &&
+						node.moduleSpecifier.text.startsWith('.')
+					) {
+						const resolved = resolve_dts(file, node.moduleSpecifier.text);
 
-					if (name) {
-						exports.get(file).push(name.getText(module.ast));
+						included.add(resolved);
 					}
+
+					return;
 				}
+
+				if (ts.isFunctionDeclaration(node) && node.name) {
+					types.append(`\texport function `);
+					types.append(node.name.getText(module.ast), {
+						source: 'TODO',
+						line: -1,
+						column: -1
+					});
+
+					types.append('(');
+					node.parameters.forEach((param, i) => {
+						if (i > 0) types.append(', ');
+
+						types.append(param.name.getText(module.ast));
+
+						if (param.type) {
+							if (ts.isImportTypeNode(param.type)) {
+								if (param.type.qualifier) {
+									types.append(`: ${param.type.qualifier.getText(module.ast)}`);
+								} else {
+									throw new Error('TODO');
+								}
+							} else {
+								types.append(`: ${param.type.getText(module.ast)}`);
+							}
+						}
+					});
+					types.append('): TODO;');
+
+					return;
+				}
+
+				if (ts.isVariableStatement(node)) {
+				} else if (ts.isInterfaceDeclaration(node)) {
+				} else if (node.kind === 1) {
+				} else {
+					console.log(node);
+					throw new Error(`TODO:\n${node.kind}\n${node.getText(module.ast)}`);
+				}
+
+				// if (
+				// 	ts.isInterfaceDeclaration(node) ||
+				// 	ts.isTypeAliasDeclaration(node) ||
+				// 	ts.isClassDeclaration(node) ||
+				// 	ts.isFunctionDeclaration(node) ||
+				// 	ts.isVariableStatement(node)
+				// ) {
+				// 	const name = ts.isVariableStatement(node)
+				// 		? ts.getNameOfDeclaration(node.declarationList.declarations[0])
+				// 		: ts.getNameOfDeclaration(node);
+
+				// 	if (name) {
+				// 		exports.get(file).push(name.getText(module.ast));
+				// 	}
+
+				// 	walk(node, (node) => {
+				// 		// `import('./foo').Foo` -> `Foo`
+				// 		if (
+				// 			ts.isImportTypeNode(node) &&
+				// 			ts.isLiteralTypeNode(node.argument) &&
+				// 			ts.isStringLiteral(node.argument.literal) &&
+				// 			node.argument.literal.text.startsWith('.')
+				// 		) {
+				// 			// follow import
+				// 			const resolved = resolve_dts(file, node.argument.literal.text);
+
+				// 			included.add(resolved);
+
+				// 			// remove the `import(...)`
+				// 			if (node.qualifier) {
+				// 				let a = node.pos;
+				// 				while (/\s/.test(module.source[a])) a += 1;
+				// 				magic_string.remove(a, node.qualifier.pos);
+				// 			} else {
+				// 				throw new Error('TODO');
+				// 			}
+				// 		}
+				// 	});
+
+				// 	const printer = ts.createPrinter();
+
+				// 	console.log('>>>');
+				// 	console.log(
+				// 		printer.printNode(ts.EmitHint.Unspecified, node, module.ast)
+				// 	);
+				// 	console.log('<<<');
+				// }
 			});
 
-			console.log(file, exports.get(file));
+			// types.code += magic_string.indent().toString();
 		}
 
-		types.code += `}\n`;
+		types.append(`\n}\n`);
 	}
 
-	types.code += `//# sourceMappingURL=${path.basename(output)}.map`;
+	types.save();
+}
 
-	try {
-		fs.mkdirSync(path.dirname(output), { recursive: true });
-	} catch {
-		// ignore
-	}
-
-	fs.writeFileSync(output, types.code);
-	fs.writeFileSync(`${output}.map`, JSON.stringify(types.smg, null, '\t'));
+/**
+ * @param {import('typescript').Node} node
+ * @param {(node: import('typescript').Node) => void} callback
+ */
+function walk(node, callback) {
+	callback(node);
+	ts.forEachChild(node, (child) => walk(child, callback));
 }

@@ -1,0 +1,14 @@
+{
+	"name": "dts-buddy",
+	"version": "0.0.1",
+	"type": "module",
+	"dependencies": {
+		"@jridgewell/source-map": "^0.3.3",
+		"globrex": "^0.1.2",
+		"tiny-glob": "^0.2.9",
+		"typescript": "^5.0.4"
+	},
+	"devDependencies": {
+		"@types/node": "^20.2.1"
+	}
+}

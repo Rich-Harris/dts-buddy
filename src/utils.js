@@ -33,5 +33,5 @@ export function get_input_files(cwd, include = [], exclude = []) {
 		input = input.filter((file) => !regex.test(file));
 	}
 
-	return input;
+	return input.map((file) => path.resolve(file));
 }

@@ -10,7 +10,7 @@
 		"target": "esnext",
 		"moduleResolution": "bundler",
 		"paths":{
-			"my-lib":["./input/types"]
+			"my-lib":["./input/types.d.ts"]
 		}
 	},
 	"include": [

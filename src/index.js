@@ -125,19 +125,6 @@ export async function createModuleDeclarations(options) {
 
 					exports.get(file).push(name.getText(module.ast));
 				}
-
-				// if (
-				// 	ts.isInterfaceDeclaration(node) ||
-				// 	ts.isTypeAliasDeclaration(node)
-				// ) {
-				// 	console.log('isInterfaceDeclaration');
-				// }
-
-				// const modifiers = ts.getModifiers(node);
-
-				// console.log(modifiers);
-
-				// console.log(module.source.slice(node.pos, node.end));
 			});
 
 			console.log(file, exports.get(file));

@@ -9,6 +9,7 @@
 		"module": "esnext",
 		"target": "esnext",
 		"moduleResolution": "bundler",
+		"strict": true,
 		"paths":{
 			"my-lib":["./test/input/types"]
 		}

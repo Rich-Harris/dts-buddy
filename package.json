@@ -9,6 +9,7 @@
 		"typescript": "^5.0.4"
 	},
 	"devDependencies": {
+		"@types/globrex": "^0.1.2",
 		"@types/node": "^20.2.1"
 	}
 }

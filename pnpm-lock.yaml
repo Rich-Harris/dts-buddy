@@ -15,6 +15,9 @@ dependencies:
     version: 5.0.4
 
 devDependencies:
+  '@types/globrex':
+    specifier: ^0.1.2
+    version: 0.1.2
   '@types/node':
     specifier: ^20.2.1
     version: 20.2.1
@@ -61,6 +64,10 @@ packages:
       '@jridgewell/resolve-uri': 3.1.0
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: false
+
+  /@types/globrex@0.1.2:
+    resolution: {integrity: sha512-W+8iW69LnEae5H09PxjpmI3CdJyKUTBAoDyqWx6T5ewhX5unBHYYQsGYXlXQP8l3HE/Y71vswPAvxkJC92FQhQ==}
+    dev: true
 
   /@types/node@20.2.1:
     resolution: {integrity: sha512-DqJociPbZP1lbZ5SQPk4oag6W7AyaGMO6gSfRwq3PWl4PXTwJpRQJhDq4W0kzrg3w6tJ1SwlvGZ5uKFHY13LIg==}

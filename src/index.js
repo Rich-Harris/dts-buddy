@@ -43,9 +43,10 @@ export async function createModuleDeclarations(options) {
 		moduleResolution: undefined
 	};
 
+	/** @type {Record<string, string>} */
 	const created = {};
 	const host = ts.createCompilerHost(compilerOptions);
-	host.writeFile = (fileName, contents) => (created[fileName] = contents);
+	host.writeFile = (file, contents) => (created[file] = contents);
 
 	const program = ts.createProgram(input, compilerOptions, host);
 	program.emit();
@@ -56,10 +57,14 @@ export async function createModuleDeclarations(options) {
 		smg: new SourceMapGenerator({ file: path.basename(output) })
 	};
 
+	/**
+	 * @type {Map<string, import('./types').Module>}
+	 */
 	const cache = new Map();
 
 	/**
 	 * @param {string} file
+	 * @returns {import('./types').Module}
 	 */
 	function get_dts(file) {
 		const authored = file.endsWith('.d.ts');
@@ -80,17 +85,15 @@ export async function createModuleDeclarations(options) {
 				ts.ScriptKind.TS
 			);
 
-			const module = {
+			cache.set(dts_file, {
 				authored,
 				source,
 				ast,
-				smc: map && new SourceMapConsumer(JSON.parse(map), map_file)
-			};
-
-			cache.set(dts_file, module);
+				smc: map ? new SourceMapConsumer(JSON.parse(map), map_file) : null
+			});
 		}
 
-		return cache.get(dts_file);
+		return /** @type {import('./types').Module} */ (cache.get(dts_file));
 	}
 
 	// for (const file in created) {
@@ -102,6 +105,7 @@ export async function createModuleDeclarations(options) {
 	for (const id in modules) {
 		types.code += `declare module '${id}' {\n`;
 
+		const declarations = new Map();
 		const included = new Set([modules[id]]);
 		const modules_to_export_from = new Set([modules[id]]);
 
@@ -123,7 +127,9 @@ export async function createModuleDeclarations(options) {
 						? ts.getNameOfDeclaration(node.declarationList.declarations[0])
 						: ts.getNameOfDeclaration(node);
 
-					exports.get(file).push(name.getText(module.ast));
+					if (name) {
+						exports.get(file).push(name.getText(module.ast));
+					}
 				}
 			});
 

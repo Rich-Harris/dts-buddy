@@ -16,12 +16,21 @@ import { get_input_files } from './utils.js';
  * @returns {Promise<void>}
  */
 export async function createModuleDeclarations(options) {
-	const { project = 'tsconfig.json', output, modules } = options;
+	const project = options.project ?? 'tsconfig.json';
+	const output = path.resolve(options.output);
+
+	/** @type {Record<string, string>} */
+	const modules = {};
+	for (const id in options.modules) {
+		modules[id] = path.resolve(options.modules[id]);
+	}
 
 	const cwd = path.dirname(project);
 	const tsconfig = JSON.parse(fs.readFileSync(project, 'utf8'));
 
 	const input = get_input_files(cwd, tsconfig.include, tsconfig.exclude);
+
+	process.chdir(cwd);
 
 	/** @type {ts.CompilerOptions} */
 	const compilerOptions = {
@@ -84,11 +93,11 @@ export async function createModuleDeclarations(options) {
 		return cache.get(dts_file);
 	}
 
-	for (const file in created) {
-		console.log(`\u001B[1m\u001B[35m${file}\u001B[39m\u001B[22m`);
-		console.log(created[file]);
-		console.log('\n');
-	}
+	// for (const file in created) {
+	// 	console.log(`\u001B[1m\u001B[35m${file}\u001B[39m\u001B[22m`);
+	// 	console.log(created[file]);
+	// 	console.log('\n');
+	// }
 
 	for (const id in modules) {
 		types.code += `declare module '${id}' {\n`;

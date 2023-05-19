@@ -14,7 +14,7 @@
 		"@types/node": "^20.2.1"
 	},
 	"scripts": {
-		"prepublishOnly": "tsc"
+		"prepublishOnly": "node scripts/generate-dts-bundle.js"
 	},
 	"exports": {
 		".": {

@@ -10,13 +10,12 @@ import { File, get_input_files } from './utils.js';
  *   output: string;
  *   modules: Record<string, string>;
  *   project?: string;
- *   ambient?: string;
  *   include?: string[];
  *   exclude?: string[];
  * }} options
  * @returns {Promise<void>}
  */
-export async function createModuleDeclarations(options) {
+export async function createBundle(options) {
 	const project = options.project ?? 'tsconfig.json';
 	const output = path.resolve(options.output);
 

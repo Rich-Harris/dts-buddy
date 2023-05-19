@@ -15,7 +15,7 @@
 		},
 		{
 			"files": [
-				"test/samples/*/output/**"
+				"test/samples/**/output/**"
 			],
 			"options": {
 				"requirePragma": true

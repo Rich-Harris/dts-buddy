@@ -3,9 +3,9 @@
  *
  *  This is a second line
  *
- * @param {import('./types').Vector} a
- * @param {import('./types').Vector} b
- * @returns {import('./types').Vector}
+ * @param {import('./types').Vector2} a
+ * @param {import('./types').Vector2} b
+ * @returns {import('./types').Vector2}
  */
 export function add(a, b) {
 	return {

@@ -145,8 +145,22 @@ export async function createModuleDeclarations(options) {
 						node.moduleSpecifier &&
 						ts.isStringLiteral(node.moduleSpecifier)
 					) {
-						if (node.moduleSpecifier.text.startsWith('.')) {
-							const resolved = resolve_dts(file, node.moduleSpecifier.text);
+						const { text } = node.moduleSpecifier;
+
+						// if a module imports from the module we're currently declaring,
+						// just remove the import altogether
+						if (text === id) {
+							magic_string.remove(node.pos, node.end);
+						}
+
+						// if a module imports from another module we're declaring,
+						// leave the import intact
+						if (text in modules) {
+							return;
+						}
+
+						if (text.startsWith('.')) {
+							const resolved = resolve_dts(file, text);
 
 							if (ts.isImportDeclaration(node) && !node.importClause) {
 								// assume this is an ambient module
@@ -158,7 +172,12 @@ export async function createModuleDeclarations(options) {
 							magic_string.remove(node.pos, node.end);
 						}
 
-						if (node.moduleSpecifier.text === id) {
+						// if this is a local module alias, resolve it
+						if (compilerOptions.paths && text in compilerOptions.paths) {
+							const resolved = resolve_dts(cwd, compilerOptions.paths[text][0]);
+
+							included.add(resolved);
+
 							magic_string.remove(node.pos, node.end);
 						}
 					}

@@ -36,6 +36,7 @@ export async function createBundle(options) {
 		options.exclude ?? tsconfig.exclude
 	);
 
+	const original_cwd = process.cwd();
 	process.chdir(cwd);
 
 	/** @type {ts.CompilerOptions} */
@@ -279,6 +280,8 @@ export async function createBundle(options) {
 	}
 
 	types.save();
+
+	process.chdir(original_cwd);
 }
 
 /**

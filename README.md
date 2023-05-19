@@ -12,17 +12,17 @@ One thing that works everywhere is `declare module` — if you expose a file lik
 
 ```ts
 declare module 'my-lib' {
-	/**
-	 * Add two numbers
-	 */
-	export function add(a: number, b: number): number;
+  /**
+   * Add two numbers
+   */
+  export function add(a: number, b: number): number;
 }
 
 declare module 'my-lib/subpackage' {
-	/**
-	 * Multiply two numbers
-	 */
-	export function multiply(a: number, b: number): number;
+  /**
+   * Multiply two numbers
+   */
+  export function multiply(a: number, b: number): number;
 }
 ```
 
@@ -49,12 +49,12 @@ Add a script like this to your project:
 import { createBundle } from 'dts-buddy';
 
 await createBundle({
-	project: 'tsconfig.json',
-	output: 'types/index.d.ts',
-	modules: {
-		'my-lib': 'src/index.js',
-		'my-lib/subpackage': 'src/subpackage.js'
-	}
+  project: 'tsconfig.json',
+  output: 'types/index.d.ts',
+  modules: {
+    'my-lib': 'src/index.js',
+    'my-lib/subpackage': 'src/subpackage.js'
+  }
 });
 ```
 
@@ -62,27 +62,27 @@ Then, inside your package.json:
 
 ```diff
 {
-	"name": "my-lib",
-	"version": "1.0.0",
-	"type": "module",
-+	"types": "./types/index.d.ts",
-	"files": [
-		"src",
-+		"types"
-	],
-	"exports": {
-		".": {
-+			"types": "./types/index.d.ts",
-			"import": "./src/index.js"
-		},
-		"./subpackage": {
-+			"types": "./types/index.d.ts",
-			"import": "./src/subpackage.js"
-		}
-	},
-	"scripts": {
-+		"prepublishOnly": "node scripts/generate-dts-bundle.js"
-	}
+  "name": "my-lib",
+  "version": "1.0.0",
+  "type": "module",
++  "types": "./types/index.d.ts",
+  "files": [
+    "src",
++    "types"
+  ],
+  "exports": {
+    ".": {
++      "types": "./types/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./subpackage": {
++      "types": "./types/index.d.ts",
+      "import": "./src/subpackage.js"
+    }
+  },
+  "scripts": {
++    "prepublishOnly": "node scripts/generate-dts-bundle.js"
+  }
 }
 ```
 

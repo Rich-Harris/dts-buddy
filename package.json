@@ -25,5 +25,6 @@
 			"import": "./src/index.js"
 		}
 	},
-	"types": "./types/index.d.ts"
+	"types": "./types/index.d.ts",
+	"packageManager": "pnpm@8.5.1"
 }

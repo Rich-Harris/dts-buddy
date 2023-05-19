@@ -222,9 +222,12 @@ export async function createBundle(options) {
 							}
 						}
 
+						// @ts-expect-error
 						if (node.jsDoc) {
+							// @ts-expect-error
 							for (const jsDoc of node.jsDoc) {
 								if (jsDoc.comment) {
+									// @ts-expect-error
 									jsDoc.tags?.forEach((tag) => {
 										magic_string.remove(tag.pos, tag.end);
 									});
@@ -254,9 +257,12 @@ export async function createBundle(options) {
 		ts.forEachChild(module.ast, (node) => {
 			if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
 				walk(node, (node) => {
+					// @ts-expect-error
 					if (node.jsDoc) {
+						// @ts-expect-error
 						for (const jsDoc of node.jsDoc) {
 							if (jsDoc.comment) {
+								// @ts-expect-error
 								jsDoc.tags?.forEach((tag) => {
 									magic_string.remove(tag.pos, tag.end);
 								});

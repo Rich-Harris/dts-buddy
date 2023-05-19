@@ -116,6 +116,9 @@ export async function createModuleDeclarations(options) {
 	// 	console.log('\n');
 	// }
 
+	/** @type {Set<string>} */
+	const ambient_modules = new Set();
+
 	for (const id in modules) {
 		types.append(`declare module '${id}' {`);
 
@@ -140,13 +143,24 @@ export async function createModuleDeclarations(options) {
 					// TODO handle node_modules as well as relative imports, where specified
 					if (
 						node.moduleSpecifier &&
-						ts.isStringLiteral(node.moduleSpecifier) &&
-						node.moduleSpecifier.text.startsWith('.')
+						ts.isStringLiteral(node.moduleSpecifier)
 					) {
-						const resolved = resolve_dts(file, node.moduleSpecifier.text);
-						included.add(resolved);
+						if (node.moduleSpecifier.text.startsWith('.')) {
+							const resolved = resolve_dts(file, node.moduleSpecifier.text);
 
-						magic_string.remove(node.pos, node.end);
+							if (ts.isImportDeclaration(node) && !node.importClause) {
+								// assume this is an ambient module
+								ambient_modules.add(resolved);
+							} else {
+								included.add(resolved);
+							}
+
+							magic_string.remove(node.pos, node.end);
+						}
+
+						if (node.moduleSpecifier.text === id) {
+							magic_string.remove(node.pos, node.end);
+						}
 					}
 
 					return;
@@ -209,6 +223,35 @@ export async function createModuleDeclarations(options) {
 		}
 
 		types.append(`\n}\n\n`);
+	}
+
+	for (const file of ambient_modules) {
+		const module = get_dts(file);
+
+		const magic_string = new MagicString(module.source);
+
+		const index = module.source.indexOf('//# sourceMappingURL=');
+		if (index !== -1) magic_string.remove(index, module.source.length);
+
+		ts.forEachChild(module.ast, (node) => {
+			if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+				walk(node, (node) => {
+					if (node.jsDoc) {
+						for (const jsDoc of node.jsDoc) {
+							if (jsDoc.comment) {
+								jsDoc.tags?.forEach((tag) => {
+									magic_string.remove(tag.pos, tag.end);
+								});
+							} else {
+								magic_string.remove(jsDoc.pos, jsDoc.end);
+							}
+						}
+					}
+				});
+			}
+		});
+
+		types.append(magic_string.trim().toString());
 	}
 
 	types.save();

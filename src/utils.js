@@ -68,10 +68,9 @@ export class File {
 			// ignore
 		}
 
-		const comment = `//# sourceMappingURL=${path.basename(this.#filename)}.map`;
-		this.#contents += comment;
+		// const comment = `//# sourceMappingURL=${path.basename(this.#filename)}.map`;
+		// this.#contents += `\n${comment}`;
 
-		console.log('saving', this.#filename);
 		fs.writeFileSync(this.#filename, this.#contents);
 
 		// TODO generate sourcemap

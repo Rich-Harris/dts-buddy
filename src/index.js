@@ -7,10 +7,12 @@ import { File, get_input_files } from './utils.js';
 
 /**
  * @param {{
- *   project: string;
  *   output: string;
- *   ambient: string;
- *   modules: Record<string, string>
+ *   modules: Record<string, string>;
+ *   project?: string;
+ *   ambient?: string;
+ *   include?: string[];
+ *   exclude?: string[];
  * }} options
  * @returns {Promise<void>}
  */
@@ -27,9 +29,13 @@ export async function createModuleDeclarations(options) {
 	}
 
 	const cwd = path.dirname(project);
-	const tsconfig = JSON.parse(fs.readFileSync(project, 'utf8'));
+	const tsconfig = eval(`(${fs.readFileSync(project, 'utf-8')})`);
 
-	const input = get_input_files(cwd, tsconfig.include, tsconfig.exclude);
+	const input = get_input_files(
+		cwd,
+		options.include ?? tsconfig.include,
+		options.exclude ?? tsconfig.exclude
+	);
 
 	process.chdir(cwd);
 
@@ -41,7 +47,8 @@ export async function createModuleDeclarations(options) {
 		declarationDir: undefined,
 		declarationMap: true,
 		emitDeclarationOnly: true,
-		moduleResolution: undefined
+		moduleResolution: undefined,
+		noEmit: false
 	};
 
 	/** @type {Record<string, string>} */
@@ -69,7 +76,7 @@ export async function createModuleDeclarations(options) {
 		const map_file = authored ? null : file + '.map';
 
 		if (!cache.has(file)) {
-			const source = authored ? fs.readFileSync(file, 'utf8') : created[file];
+			const source = created[file] ?? fs.readFileSync(file, 'utf8');
 			const map = map_file && created[map_file];
 
 			const ast = ts.createSourceFile(
@@ -103,11 +110,11 @@ export async function createModuleDeclarations(options) {
 		return file + '.d.ts';
 	}
 
-	for (const file in created) {
-		console.log(`\u001B[1m\u001B[35m${file}\u001B[39m\u001B[22m`);
-		console.log(created[file]);
-		console.log('\n');
-	}
+	// for (const file in created) {
+	// 	console.log(`\u001B[1m\u001B[35m${file}\u001B[39m\u001B[22m`);
+	// 	console.log(created[file]);
+	// 	console.log('\n');
+	// }
 
 	for (const id in modules) {
 		types.append(`declare module '${id}' {`);
@@ -122,6 +129,11 @@ export async function createModuleDeclarations(options) {
 			const module = get_dts(file);
 			exports.set(file, []);
 
+			const magic_string = new MagicString(module.source);
+
+			const index = module.source.indexOf('//# sourceMappingURL=');
+			if (index !== -1) magic_string.remove(index, module.source.length);
+
 			ts.forEachChild(module.ast, (node) => {
 				// follow imports
 				if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -132,105 +144,71 @@ export async function createModuleDeclarations(options) {
 						node.moduleSpecifier.text.startsWith('.')
 					) {
 						const resolved = resolve_dts(file, node.moduleSpecifier.text);
-
 						included.add(resolved);
+
+						magic_string.remove(node.pos, node.end);
 					}
 
 					return;
 				}
 
-				if (ts.isFunctionDeclaration(node) && node.name) {
-					types.append(`\texport function `);
-					types.append(node.name.getText(module.ast), {
-						source: 'TODO',
-						line: -1,
-						column: -1
-					});
+				if (
+					ts.isInterfaceDeclaration(node) ||
+					ts.isTypeAliasDeclaration(node) ||
+					ts.isClassDeclaration(node) ||
+					ts.isFunctionDeclaration(node) ||
+					ts.isVariableStatement(node)
+				) {
+					const name = ts.isVariableStatement(node)
+						? ts.getNameOfDeclaration(node.declarationList.declarations[0])
+						: ts.getNameOfDeclaration(node);
 
-					types.append('(');
-					node.parameters.forEach((param, i) => {
-						if (i > 0) types.append(', ');
+					if (name) {
+						exports.get(file).push(name.getText(module.ast));
+					}
 
-						types.append(param.name.getText(module.ast));
+					walk(node, (node) => {
+						// `import('./foo').Foo` -> `Foo`
+						if (
+							ts.isImportTypeNode(node) &&
+							ts.isLiteralTypeNode(node.argument) &&
+							ts.isStringLiteral(node.argument.literal) &&
+							node.argument.literal.text.startsWith('.')
+						) {
+							// follow import
+							const resolved = resolve_dts(file, node.argument.literal.text);
 
-						if (param.type) {
-							if (ts.isImportTypeNode(param.type)) {
-								if (param.type.qualifier) {
-									types.append(`: ${param.type.qualifier.getText(module.ast)}`);
-								} else {
-									throw new Error('TODO');
-								}
+							included.add(resolved);
+
+							// remove the `import(...)`
+							if (node.qualifier) {
+								let a = node.pos;
+								while (/\s/.test(module.source[a])) a += 1;
+								magic_string.remove(a, node.qualifier.pos);
 							} else {
-								types.append(`: ${param.type.getText(module.ast)}`);
+								throw new Error('TODO');
+							}
+						}
+
+						if (node.jsDoc) {
+							for (const jsDoc of node.jsDoc) {
+								if (jsDoc.comment) {
+									jsDoc.tags?.forEach((tag) => {
+										magic_string.remove(tag.pos, tag.end);
+									});
+								} else {
+									magic_string.remove(jsDoc.pos, jsDoc.end);
+								}
 							}
 						}
 					});
-					types.append('): TODO;');
-
-					return;
 				}
-
-				if (ts.isVariableStatement(node)) {
-				} else if (ts.isInterfaceDeclaration(node)) {
-				} else if (node.kind === 1) {
-				} else {
-					console.log(node);
-					throw new Error(`TODO:\n${node.kind}\n${node.getText(module.ast)}`);
-				}
-
-				// if (
-				// 	ts.isInterfaceDeclaration(node) ||
-				// 	ts.isTypeAliasDeclaration(node) ||
-				// 	ts.isClassDeclaration(node) ||
-				// 	ts.isFunctionDeclaration(node) ||
-				// 	ts.isVariableStatement(node)
-				// ) {
-				// 	const name = ts.isVariableStatement(node)
-				// 		? ts.getNameOfDeclaration(node.declarationList.declarations[0])
-				// 		: ts.getNameOfDeclaration(node);
-
-				// 	if (name) {
-				// 		exports.get(file).push(name.getText(module.ast));
-				// 	}
-
-				// 	walk(node, (node) => {
-				// 		// `import('./foo').Foo` -> `Foo`
-				// 		if (
-				// 			ts.isImportTypeNode(node) &&
-				// 			ts.isLiteralTypeNode(node.argument) &&
-				// 			ts.isStringLiteral(node.argument.literal) &&
-				// 			node.argument.literal.text.startsWith('.')
-				// 		) {
-				// 			// follow import
-				// 			const resolved = resolve_dts(file, node.argument.literal.text);
-
-				// 			included.add(resolved);
-
-				// 			// remove the `import(...)`
-				// 			if (node.qualifier) {
-				// 				let a = node.pos;
-				// 				while (/\s/.test(module.source[a])) a += 1;
-				// 				magic_string.remove(a, node.qualifier.pos);
-				// 			} else {
-				// 				throw new Error('TODO');
-				// 			}
-				// 		}
-				// 	});
-
-				// 	const printer = ts.createPrinter();
-
-				// 	console.log('>>>');
-				// 	console.log(
-				// 		printer.printNode(ts.EmitHint.Unspecified, node, module.ast)
-				// 	);
-				// 	console.log('<<<');
-				// }
 			});
 
-			// types.code += magic_string.indent().toString();
+			types.append(magic_string.trim().indent().toString());
 		}
 
-		types.append(`\n}\n`);
+		types.append(`\n}\n\n`);
 	}
 
 	types.save();

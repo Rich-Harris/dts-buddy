@@ -12,5 +12,15 @@
 	"devDependencies": {
 		"@types/globrex": "^0.1.2",
 		"@types/node": "^20.2.1"
-	}
+	},
+	"scripts": {
+		"prepublishOnly": "tsc"
+	},
+	"exports": {
+		".": {
+			"types": "./types/index.d.ts",
+			"import": "./src/index.js"
+		}
+	},
+	"types": "./types/index.d.ts"
 }

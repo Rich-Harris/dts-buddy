@@ -435,19 +435,12 @@ export async function createBundle(options) {
 		);
 	}
 
-	// then save
-	try {
-		fs.mkdirSync(path.dirname(output), { recursive: true });
-	} catch {
-		// ignore
-	}
-
 	const comment = `//# sourceMappingURL=${path.basename(output)}.map`;
 	magic_string.append(`\n${comment}`);
 
-	fs.writeFileSync(output, magic_string.toString());
+	write(output, magic_string.toString());
 
-	fs.writeFileSync(`${output}.map`, JSON.stringify(smg.toJSON(), null, '\t'));
+	write(`${output}.map`, JSON.stringify(smg.toJSON(), null, '\t'));
 
 	process.chdir(original_cwd);
 }

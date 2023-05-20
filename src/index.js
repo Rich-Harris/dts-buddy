@@ -3,7 +3,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
-import { SourceMapConsumer, SourceMapGenerator } from '@jridgewell/source-map';
+import { SourceMapGenerator } from '@jridgewell/source-map';
 import { decode } from '@jridgewell/sourcemap-codec';
 import { get_input_files, write } from './utils.js';
 
@@ -257,10 +257,6 @@ export async function createBundle(options) {
 								// find the segments immediately before and after the generated column
 								const index = segments.findIndex((segment) => segment[0] >= loc.column);
 								const a = segments[index - 1] ?? segments[0];
-								if (!a) {
-									console.log({ file, name, loc, segments });
-									console.log(module.dts);
-								}
 								let l = /** @type {number} */ (a[2]);
 
 								const source_line = module.source.split('\n')[l];

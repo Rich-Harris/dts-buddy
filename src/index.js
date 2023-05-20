@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import MagicString from 'magic-string';
-import { SourceMapConsumer } from '@jridgewell/source-map';
-import { get_input_files } from './utils.js';
+import { getLocator } from 'locate-character';
+import { SourceMapConsumer, SourceMapGenerator } from '@jridgewell/source-map';
+import { get_input_files, write } from './utils.js';
 
 /**
  * @param {{
@@ -12,6 +13,7 @@ import { get_input_files } from './utils.js';
  *   project?: string;
  *   include?: string[];
  *   exclude?: string[];
+ *   debug?: string;
  * }} options
  * @returns {Promise<void>}
  */
@@ -25,7 +27,7 @@ export async function createBundle(options) {
 		modules[id] = path.resolve(options.modules[id]).replace(/(\.d\.ts|\.js|\.ts)$/, '.d.ts');
 	}
 
-	const cwd = path.dirname(project);
+	const cwd = path.resolve(path.dirname(project));
 	const tsconfig = eval(`(${fs.readFileSync(project, 'utf-8')})`);
 
 	const input = get_input_files(
@@ -56,6 +58,21 @@ export async function createBundle(options) {
 
 	const program = ts.createProgram(input, compilerOptions, host);
 	program.emit();
+
+	if (options.debug) {
+		for (const file in created) {
+			const relative = path.relative(cwd, file);
+			const dest = path.join(options.debug, relative);
+			write(dest, created[file]);
+		}
+
+		for (const file of input) {
+			if (!file.endsWith('.d.ts')) continue;
+			const relative = path.relative(cwd, file);
+			const dest = path.join(options.debug, relative);
+			write(dest, fs.readFileSync(file, 'utf-8'));
+		}
+	}
 
 	let types = '';
 
@@ -88,7 +105,8 @@ export async function createBundle(options) {
 				authored,
 				source,
 				ast,
-				smc: map ? new SourceMapConsumer(JSON.parse(map), map_file) : null
+				smc: map ? new SourceMapConsumer(JSON.parse(map), map_file) : null,
+				locator: getLocator(source, { offsetLine: 1 })
 			});
 		}
 
@@ -100,7 +118,7 @@ export async function createBundle(options) {
 	 * @param {string} to
 	 */
 	function resolve_dts(from, to) {
-		const file = path.resolve(path.dirname(from), to);
+		const file = path.resolve(from, to);
 		if (file.endsWith('.d.ts')) return file;
 		if (file.endsWith('.ts')) return file.replace(/\.ts$/, '.d.ts');
 		if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
@@ -108,13 +126,20 @@ export async function createBundle(options) {
 	}
 
 	/** @type {Map<string, string[]>} **/
-	const exports = new Map();
+	const all_exports = new Map();
+
+	/** @type {Map<string, Map<string, import('./types').Mapping>>} */
+	const all_mappings = new Map();
 
 	/** @type {Set<string>} */
 	const ambient_modules = new Set();
 
 	for (const id in modules) {
 		types += `declare module '${id}' {`;
+
+		/** @type {Map<string, import('./types').Mapping>} */
+		const mappings = new Map();
+		all_mappings.set(id, mappings);
 
 		const included = new Set([modules[id]]);
 
@@ -160,7 +185,7 @@ export async function createBundle(options) {
 
 						// resolve relative imports and aliases (from tsconfig.paths)
 						const resolved = text.startsWith('.')
-							? resolve_dts(file, text)
+							? resolve_dts(path.dirname(file), text)
 							: compilerOptions.paths && text in compilerOptions.paths
 							? resolve_dts(cwd, compilerOptions.paths[text][0])
 							: null;
@@ -208,12 +233,31 @@ export async function createBundle(options) {
 				) {
 					const export_modifier = node.modifiers && node.modifiers.find((node) => node.kind === 93);
 					if (export_modifier) {
-						const name = ts.isVariableStatement(node)
+						const identifier = ts.isVariableStatement(node)
 							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
 							: ts.getNameOfDeclaration(node);
 
-						if (name) {
-							exported.push(name.getText(module.ast));
+						if (identifier) {
+							const name = identifier.getText(module.ast);
+							exported.push(name);
+
+							const pos = identifier.getStart(module.ast);
+							const loc = module.locator(pos);
+
+							const mapping = module.smc
+								? module.smc.originalPositionFor({
+										line: loc.line,
+										column: loc.column
+								  })
+								: {
+										source: file,
+										line: loc.line,
+										column: loc.column
+								  };
+
+							if (mapping && mapping.source) {
+								mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
+							}
 						}
 
 						// remove all export keywords in the initial pass; reinstate as necessary later
@@ -233,7 +277,7 @@ export async function createBundle(options) {
 							node.argument.literal.text.startsWith('.')
 						) {
 							// follow import
-							const resolved = resolve_dts(file, node.argument.literal.text);
+							const resolved = resolve_dts(path.dirname(file), node.argument.literal.text);
 
 							included.add(resolved);
 
@@ -270,7 +314,7 @@ export async function createBundle(options) {
 
 		/** @type {string[]} */
 		const exported = [];
-		exports.set(id, exported);
+		all_exports.set(id, exported);
 
 		for (const id of modules_to_export_all_from) {
 			for (const name of /** @type {string[]} */ (module_exports.get(id))) {
@@ -315,7 +359,12 @@ export async function createBundle(options) {
 
 	// finally, add back exports as appropriate
 	const ast = ts.createSourceFile(output, types, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
-	const magic_string = new MagicString(types.toString());
+	const magic_string = new MagicString(types);
+	const locator = getLocator(types, { offsetLine: 1 });
+	const smg = new SourceMapGenerator({ file: path.basename(output) });
+
+	/** @type {Set<string>} */
+	const sources = new Set();
 
 	ts.forEachChild(ast, (node) => {
 		if (ts.isModuleDeclaration(node)) {
@@ -323,8 +372,10 @@ export async function createBundle(options) {
 
 			const name = node.name.text;
 
-			const exported = exports.get(name);
+			const exported = all_exports.get(name);
 			if (!exported) return;
+
+			const mappings = all_mappings.get(name);
 
 			node.body.forEachChild((node) => {
 				if (
@@ -344,11 +395,45 @@ export async function createBundle(options) {
 							const start = node.getStart(ast);
 							magic_string.prependRight(start, 'export ');
 						}
+
+						const mapping = mappings?.get(name);
+
+						if (mapping) {
+							const start = identifier.getStart(ast);
+							const source = path.relative(path.dirname(output), mapping.source);
+							let { line, column } = locator(start);
+							if (exported.includes(name)) column += 7;
+
+							// column = 0;
+
+							smg.addMapping({
+								generated: { line, column },
+								original: { line: mapping.line, column },
+								source,
+								name
+							});
+
+							// smg.addMapping({
+							// 	generated: { line, column: column + name.length },
+							// 	original: { line: mapping.line, column: mapping.column + name.length },
+							// 	source,
+							// 	name
+							// });
+
+							sources.add(mapping.source);
+						}
 					}
 				}
 			});
 		}
 	});
+
+	for (const source of sources) {
+		smg.setSourceContent(
+			path.relative(path.dirname(output), source),
+			fs.readFileSync(source, 'utf8')
+		);
+	}
 
 	// then save
 	try {
@@ -357,13 +442,12 @@ export async function createBundle(options) {
 		// ignore
 	}
 
-	// const comment = `//# sourceMappingURL=${path.basename(output)}.map`;
-	// types += `\n${comment}`;
+	const comment = `//# sourceMappingURL=${path.basename(output)}.map`;
+	magic_string.append(`\n${comment}`);
 
 	fs.writeFileSync(output, magic_string.toString());
 
-	// TODO generate sourcemap
-	// fs.writeFileSync(`${this.#filename}.map`, JSON.stringify(types.smg, null, '\t'));
+	fs.writeFileSync(`${output}.map`, JSON.stringify(smg.toJSON(), null, '\t'));
 
 	process.chdir(original_cwd);
 }

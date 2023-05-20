@@ -29,4 +29,4 @@ declare module 'my-lib/subpackage' {
 	 * */
 	export function multiply(a: import('my-lib').Vector2, b: import('my-lib').Vector2): import('my-lib').Vector2;
 }
-
+//# sourceMappingURL=index.d.ts.map

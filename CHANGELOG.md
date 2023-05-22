@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.0.5
+
+- Remove unwanted `declare` keywords from `.d.ts` output
+
 ## 0.0.4
 
 - Add a CLI

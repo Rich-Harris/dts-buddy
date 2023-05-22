@@ -13,9 +13,9 @@
 		"../input/subpackage/multiply.js"
 	],
 	"sourcesContent": [
-		"/** A vector with two components */\nexport interface Vector2 {\n\t/** The x component */\n\tx: number;\n\t/** The y component */\n\ty: number;\n}\n\n/** A vector with three components */\nexport interface Vector3 extends Vector2 {\n\t/** The z component */\n\tz: number;\n}",
-		"/**\n * Add two vectors\n * @param {import('./types').Vector2} a\n * @param {import('./types').Vector2} b\n * @returns {import('./types').Vector2}\n */\nexport function add(a, b) {\n\treturn {\n\t\tx: a.x + b.x,\n\t\ty: a.y + b.y\n\t};\n}\n",
-		"/**\n * Multiply two vectors\n * @param {import('my-lib').Vector2} a\n * @param {import('my-lib').Vector2} b\n * @returns {import('my-lib').Vector2}\n */\nexport function multiply(a, b) {\n\treturn {\n\t\tx: multiply_numbers(a.x, b.x),\n\t\ty: multiply_numbers(a.y, b.y)\n\t};\n}\n\n/**\n * Multiply two numbers\n * @param {number} a\n * @param {number} b\n */\nfunction multiply_numbers(a, b) {\n\treturn a * b;\n}\n"
+		null,
+		null,
+		null
 	],
 	"mappings": ";;;kBACiBA,OAAOA;;;;;;;;WAQPC,OAAOA;;;;;;;iBCHRC,GAAGA;;;;;;;;iBCAHC,QAAQA"
 }

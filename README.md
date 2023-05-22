@@ -42,23 +42,7 @@ An extra dimension is that we have virtual modules like `$app/environment`, whic
 
 ## How do I use it?
 
-Add a script like this to your project:
-
-```js
-// scripts/generate-dts-bundle.js
-import { createBundle } from 'dts-buddy';
-
-await createBundle({
-  project: 'tsconfig.json',
-  output: 'types/index.d.ts',
-  modules: {
-    'my-lib': 'src/index.js',
-    'my-lib/subpackage': 'src/subpackage.js'
-  }
-});
-```
-
-Then, inside your package.json:
+Pick a place to write your `.d.ts` file to — e.g. `types/index.d.ts` — then add it to your `package.json` both as the top-level `types` property and the `types` value of each entry in your `exports` map. Add a `prepublishOnly` step to your `scripts`:
 
 ```diff
 {
@@ -86,13 +70,28 @@ Then, inside your package.json:
 }
 ```
 
+`dts-buddy` will infer the entry points and the output location from your `package.json`. You can also use the JavaScript API directly:
+
+```js
+// scripts/generate-dts-bundle.js
+import { createBundle } from 'dts-buddy';
+
+await createBundle({
+  project: 'tsconfig.json',
+  output: 'types/index.d.ts',
+  modules: {
+    'my-lib': 'src/index.js',
+    'my-lib/subpackage': 'src/subpackage.js'
+  }
+});
+```
+
 ## Known limitations
 
 This is a very rough-and-ready tool, that probably won't work for your use case (at least yet). In particular:
 
-- everything gets exported, including your internal types. oops!
 - names are not deconflicted. if you have two things called `Foo` declared in separate modules, they might clobber each other depending on where they get used. oops!
-- no sourcemaps yet
+- sourcemaps aren't 100% reliable yet
 
 ## License
 

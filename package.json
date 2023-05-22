@@ -4,7 +4,9 @@
 	"type": "module",
 	"dependencies": {
 		"@jridgewell/source-map": "^0.3.3",
+		"@jridgewell/sourcemap-codec": "^1.4.15",
 		"globrex": "^0.1.2",
+		"locate-character": "^2.0.5",
 		"magic-string": "^0.30.0",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^5.0.4"

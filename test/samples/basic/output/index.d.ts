@@ -15,9 +15,6 @@ declare module 'my-lib' {
 	}
 	/**
 	 * Add two vectors
-	 *
-	 *  This is a second line
-	 *
 	 * */
 	export function add(a: Vector2, b: Vector2): Vector2;
 }
@@ -30,3 +27,5 @@ declare module 'my-lib/subpackage' {
 	export function multiply(a: import('my-lib').Vector2, b: import('my-lib').Vector2): import('my-lib').Vector2;
 }
 
+
+//# sourceMappingURL=index.d.ts.map

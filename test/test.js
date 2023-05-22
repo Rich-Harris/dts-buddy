@@ -14,7 +14,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 			modules: {
 				'my-lib': `${dir}/input/types.d.ts`,
 				'my-lib/subpackage': `${dir}/input/subpackage/index.js`
-			}
+			},
+			debug: `${dir}/debug`
 		});
 
 		const actual = glob('**', { cwd: `${dir}/actual`, filesOnly: true }).sort();

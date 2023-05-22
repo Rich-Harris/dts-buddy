@@ -35,3 +35,14 @@ export function get_input_files(cwd, include = [], exclude = []) {
 
 	return input.map((file) => path.resolve(file));
 }
+
+/**
+ * @param {string} file
+ * @param {string} contents
+ */
+export function write(file, contents) {
+	try {
+		fs.mkdirSync(path.dirname(file), { recursive: true });
+	} catch {}
+	fs.writeFileSync(file, contents);
+}

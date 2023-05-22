@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.0.4
+
+- Add a CLI
+
 ## 0.0.3
 
 - Generate declaration maps

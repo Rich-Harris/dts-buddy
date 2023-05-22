@@ -1,0 +1,19 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"Vector2",
+		"Vector3",
+		"add",
+		"multiply"
+	],
+	"sources": [
+		"../input/index.ts",
+		"../input/subpackage/multiply.ts"
+	],
+	"sourcesContent": [
+		null,
+		null
+	],
+	"mappings": ";;qBACiBA,OAAOA;;;;;;;qBAQPC,OAAOA;;;;;;;oBAQRC,GAAGA;;;;;;;;;iBCZHC,QAAQA"
+}

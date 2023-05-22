@@ -8,13 +8,15 @@ for (const sample of fs.readdirSync('test/samples')) {
 	test(sample, async () => {
 		const dir = `test/samples/${sample}`;
 
+		const modules = JSON.parse(fs.readFileSync(`${dir}/modules.json`, 'utf-8'));
+		for (const [name, value] of Object.entries(modules)) {
+			modules[name] = `${dir}/input/${value}`;
+		}
+
 		await createBundle({
 			project: `${dir}/tsconfig.json`,
 			output: `${dir}/actual/index.d.ts`,
-			modules: {
-				'my-lib': `${dir}/input/types.d.ts`,
-				'my-lib/subpackage': `${dir}/input/subpackage/index.js`
-			},
+			modules,
 			debug: `${dir}/debug`
 		});
 

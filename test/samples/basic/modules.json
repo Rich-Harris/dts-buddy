@@ -1,0 +1,4 @@
+{
+	"my-lib": "types.d.ts",
+	"my-lib/subpackage": "subpackage/index.js"
+}

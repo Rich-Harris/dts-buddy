@@ -236,7 +236,7 @@ export async function createBundle(options) {
 					ts.isFunctionDeclaration(node) ||
 					ts.isVariableStatement(node)
 				) {
-					const export_modifier = node.modifiers && node.modifiers.find((node) => node.kind === 93);
+					const export_modifier = node.modifiers?.find((node) => node.kind === 93);
 					if (export_modifier) {
 						const identifier = ts.isVariableStatement(node)
 							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
@@ -288,6 +288,17 @@ export async function createBundle(options) {
 						// remove all export keywords in the initial pass; reinstate as necessary later
 						let b = export_modifier.end;
 						const a = b - 6;
+						while (/\s/.test(module.dts[b])) b += 1;
+
+						magic_string.remove(a, b);
+					}
+
+					const declare_modifier = node.modifiers?.find((node) => node.kind === 136);
+					if (declare_modifier) {
+						// i'm not sure why typescript turns `export function` in a .ts file to `export declare function`,
+						// but it's weird and we don't want it
+						let b = declare_modifier.end;
+						const a = b - 7;
 						while (/\s/.test(module.dts[b])) b += 1;
 
 						magic_string.remove(a, b);

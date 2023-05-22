@@ -452,12 +452,12 @@ export async function createBundle(options) {
 		}
 	});
 
-	for (const source of sources) {
-		smg.setSourceContent(
-			path.relative(path.dirname(output), source),
-			fs.readFileSync(source, 'utf8')
-		);
-	}
+	// for (const source of sources) {
+	// 	smg.setSourceContent(
+	// 		path.relative(path.dirname(output), source),
+	// 		fs.readFileSync(source, 'utf8')
+	// 	);
+	// }
 
 	const comment = `//# sourceMappingURL=${path.basename(output)}.map`;
 	magic_string.append(`\n${comment}`);

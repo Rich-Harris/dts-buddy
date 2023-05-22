@@ -139,7 +139,12 @@ export async function createBundle(options) {
 	/** @type {Set<string>} */
 	const ambient_modules = new Set();
 
+	let first = true;
+
 	for (const id in modules) {
+		if (!first) types += '\n\n';
+		first = false;
+
 		types += `declare module '${id}' {`;
 
 		/** @type {Map<string, import('./types').Mapping>} */
@@ -157,7 +162,6 @@ export async function createBundle(options) {
 		const modules_to_export_all_from = new Set([modules[id]]);
 
 		for (const file of included) {
-			types += '\n';
 			const module = get_dts(file);
 
 			/** @type {string[]} */
@@ -345,7 +349,8 @@ export async function createBundle(options) {
 				}
 			});
 
-			types += magic_string.trim().indent().toString();
+			const mod = magic_string.trim().indent().toString().replace(/^(    )+/gm, match => '\t'.repeat(match.length / 4));
+			if (mod) types += '\n' + mod;
 		}
 
 		/** @type {string[]} */
@@ -358,7 +363,7 @@ export async function createBundle(options) {
 			}
 		}
 
-		types += `\n}\n\n`;
+		types += `\n}`;
 	}
 
 	for (const file of ambient_modules) {
@@ -471,7 +476,7 @@ export async function createBundle(options) {
 	// }
 
 	const comment = `//# sourceMappingURL=${path.basename(output)}.map`;
-	magic_string.append(`\n${comment}`);
+	magic_string.append(`\n\n${comment}`);
 
 	write(output, magic_string.toString());
 

@@ -1,5 +1,4 @@
 declare module 'my-lib' {
-
 	/** A vector with two components */
 	export interface Vector2 {
 		/** The x component */
@@ -20,12 +19,10 @@ declare module 'my-lib' {
 }
 
 declare module 'my-lib/subpackage' {
-
 	/**
 	 * Multiply two vectors
 	 * */
 	export function multiply(a: import('my-lib').Vector2, b: import('my-lib').Vector2): import('my-lib').Vector2;
 }
-
 
 //# sourceMappingURL=index.d.ts.map

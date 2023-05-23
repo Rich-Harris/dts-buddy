@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.0.8
+
+- Preserve `@example` and `@default` tags
+
 ## 0.0.7
 
 - Include `types` in `pkg.files`

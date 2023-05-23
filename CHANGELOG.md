@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.0.7
+
+- Include `types` in `pkg.files`
+
 ## 0.0.6
 
 - Tidier output

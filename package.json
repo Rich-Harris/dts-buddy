@@ -1,6 +1,6 @@
 {
 	"name": "dts-buddy",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"type": "module",
 	"dependencies": {
 		"@jridgewell/source-map": "^0.3.3",
@@ -30,6 +30,7 @@
 		}
 	},
 	"types": "./types/index.d.ts",
+	"files": ["src", "types"],
 	"bin": "./src/cli.js",
 	"packageManager": "pnpm@8.5.1"
 }

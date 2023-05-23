@@ -338,6 +338,8 @@ export async function createBundle(options) {
 								if (jsDoc.comment) {
 									// @ts-expect-error
 									jsDoc.tags?.forEach((tag) => {
+										const kind = tag.tagName.escapedText;
+										if (kind === 'example' || kind === 'default') return; // TODO others?
 										magic_string.remove(tag.pos, tag.end);
 									});
 								} else {

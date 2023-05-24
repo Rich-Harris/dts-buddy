@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.0.9
+
+- Warn instead of failing on invalid `pkg.exports` entries
+
 ## 0.0.8
 
 - Preserve `@example` and `@default` tags

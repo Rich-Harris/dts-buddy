@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.0.10
+
+- Ignore `outDir` setting
+
 ## 0.0.9
 
 - Warn instead of failing on invalid `pkg.exports` entries

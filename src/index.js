@@ -45,13 +45,15 @@ export async function createBundle(options) {
 	const compilerOptions = {
 		...tsconfig.compilerOptions,
 		allowJs: true,
+		checkJs: true,
 		declaration: true,
 		declarationDir: undefined,
 		declarationMap: true,
 		emitDeclarationOnly: true,
 		moduleResolution: undefined,
 		noEmit: false,
-		noEmitOnError: false
+		noEmitOnError: false,
+		outDir: undefined
 	};
 
 	/** @type {Record<string, string>} */

@@ -165,6 +165,9 @@ export async function createBundle(options) {
 
 			const modules_to_export_all_from = new Set([modules[id]]);
 
+			/** @type {import('./types').Module[]} */
+			const bundle = [];
+
 			for (const file of included) {
 				const module = get_dts(file);
 
@@ -353,6 +356,10 @@ export async function createBundle(options) {
 					}
 				});
 
+				bundle.push(module);
+			}
+
+			for (const module of bundle) {
 				const mod = module.result
 					.trim()
 					.indent()

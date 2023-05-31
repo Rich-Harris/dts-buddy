@@ -112,7 +112,8 @@ export async function createBundle(options) {
 					ast,
 					map,
 					mappings: map ? decode(map.mappings) : null,
-					locator: getLocator(dts, { offsetLine: 1 })
+					locator: getLocator(dts, { offsetLine: 1 }),
+					result: new MagicString(dts)
 				};
 
 				cache.set(file, module);
@@ -172,10 +173,8 @@ export async function createBundle(options) {
 
 				module_exports.set(file, exported);
 
-				const magic_string = new MagicString(module.dts);
-
 				const index = module.dts.indexOf('//# sourceMappingURL=');
-				if (index !== -1) magic_string.remove(index, module.dts.length);
+				if (index !== -1) module.result.remove(index, module.dts.length);
 
 				ts.forEachChild(module.ast, (node) => {
 					// follow imports
@@ -186,7 +185,7 @@ export async function createBundle(options) {
 							// if a module imports from the module we're currently declaring,
 							// just remove the import altogether
 							if (text === id) {
-								magic_string.remove(node.pos, node.end);
+								module.result.remove(node.pos, node.end);
 							}
 
 							// if a module imports from another module we're declaring,
@@ -229,7 +228,7 @@ export async function createBundle(options) {
 									}
 								}
 
-								magic_string.remove(node.pos, node.end);
+								module.result.remove(node.pos, node.end);
 							}
 						}
 
@@ -297,7 +296,7 @@ export async function createBundle(options) {
 							const a = b - 6;
 							while (/\s/.test(module.dts[b])) b += 1;
 
-							magic_string.remove(a, b);
+							module.result.remove(a, b);
 						}
 
 						const declare_modifier = node.modifiers?.find((node) => node.kind === 136);
@@ -308,7 +307,7 @@ export async function createBundle(options) {
 							const a = b - 7;
 							while (/\s/.test(module.dts[b])) b += 1;
 
-							magic_string.remove(a, b);
+							module.result.remove(a, b);
 						}
 
 						walk(node, (node) => {
@@ -328,7 +327,7 @@ export async function createBundle(options) {
 								if (node.qualifier) {
 									let a = node.pos;
 									while (/\s/.test(module.dts[a])) a += 1;
-									magic_string.remove(a, node.qualifier.pos);
+									module.result.remove(a, node.qualifier.pos);
 								} else {
 									throw new Error('TODO');
 								}
@@ -343,10 +342,10 @@ export async function createBundle(options) {
 										jsDoc.tags?.forEach((tag) => {
 											const kind = tag.tagName.escapedText;
 											if (kind === 'example' || kind === 'default') return; // TODO others?
-											magic_string.remove(tag.pos, tag.end);
+											module.result.remove(tag.pos, tag.end);
 										});
 									} else {
-										magic_string.remove(jsDoc.pos, jsDoc.end);
+										module.result.remove(jsDoc.pos, jsDoc.end);
 									}
 								}
 							}
@@ -354,7 +353,7 @@ export async function createBundle(options) {
 					}
 				});
 
-				const mod = magic_string
+				const mod = module.result
 					.trim()
 					.indent()
 					.toString()
@@ -378,10 +377,8 @@ export async function createBundle(options) {
 		for (const file of ambient_modules) {
 			const module = get_dts(file);
 
-			const magic_string = new MagicString(module.dts);
-
 			const index = module.dts.indexOf('//# sourceMappingURL=');
-			if (index !== -1) magic_string.remove(index, module.dts.length);
+			if (index !== -1) module.result.remove(index, module.dts.length);
 
 			ts.forEachChild(module.ast, (node) => {
 				if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
@@ -393,10 +390,10 @@ export async function createBundle(options) {
 								if (jsDoc.comment) {
 									// @ts-expect-error
 									jsDoc.tags?.forEach((tag) => {
-										magic_string.remove(tag.pos, tag.end);
+										module.result.remove(tag.pos, tag.end);
 									});
 								} else {
-									magic_string.remove(jsDoc.pos, jsDoc.end);
+									module.result.remove(jsDoc.pos, jsDoc.end);
 								}
 							}
 						}
@@ -404,7 +401,7 @@ export async function createBundle(options) {
 				}
 			});
 
-			types += magic_string.trim().toString();
+			types += module.result.trim().toString();
 		}
 
 		// finally, add back exports as appropriate

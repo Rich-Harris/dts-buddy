@@ -238,13 +238,7 @@ export async function createBundle(options) {
 						return;
 					}
 
-					if (
-						ts.isInterfaceDeclaration(node) ||
-						ts.isTypeAliasDeclaration(node) ||
-						ts.isClassDeclaration(node) ||
-						ts.isFunctionDeclaration(node) ||
-						ts.isVariableStatement(node)
-					) {
+					if (is_declaration(node)) {
 						const export_modifier = node.modifiers?.find((node) => node.kind === 93);
 						if (export_modifier) {
 							const identifier = ts.isVariableStatement(node)
@@ -442,13 +436,7 @@ export async function createBundle(options) {
 				const mappings = all_mappings.get(name);
 
 				node.body.forEachChild((node) => {
-					if (
-						ts.isInterfaceDeclaration(node) ||
-						ts.isTypeAliasDeclaration(node) ||
-						ts.isClassDeclaration(node) ||
-						ts.isFunctionDeclaration(node) ||
-						ts.isVariableStatement(node)
-					) {
+					if (is_declaration(node)) {
 						const identifier = ts.isVariableStatement(node)
 							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
 							: ts.getNameOfDeclaration(node);
@@ -516,4 +504,24 @@ export async function createBundle(options) {
 function walk(node, callback) {
 	callback(node);
 	ts.forEachChild(node, (child) => walk(child, callback));
+}
+
+/**
+ * @param {import('typescript').Node} node
+ * @returns {node is
+ *   import('typescript').InterfaceDeclaration |
+ *   import('typescript').TypeAliasDeclaration |
+ *   import('typescript').ClassDeclaration |
+ *   import('typescript').FunctionDeclaration |
+ *   import('typescript').VariableStatement
+ * }
+ */
+function is_declaration(node) {
+	return (
+		ts.isInterfaceDeclaration(node) ||
+		ts.isTypeAliasDeclaration(node) ||
+		ts.isClassDeclaration(node) ||
+		ts.isFunctionDeclaration(node) ||
+		ts.isVariableStatement(node)
+	);
 }

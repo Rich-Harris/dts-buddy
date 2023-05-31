@@ -4,7 +4,11 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { createBundle } from '../src/index.js';
 
+const filter = process.argv[2];
+
 for (const sample of fs.readdirSync('test/samples')) {
+	if (filter && !sample.includes(filter)) continue;
+
 	test(sample, async () => {
 		const dir = `test/samples/${sample}`;
 

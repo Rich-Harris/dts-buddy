@@ -300,6 +300,16 @@ export async function createBundle(options) {
 							while (/\s/.test(module.dts[b])) b += 1;
 
 							module.result.remove(a, b);
+
+							// remove `default` keyword
+							const default_modifier = node.modifiers?.find((node) => node.kind === 88);
+							if (default_modifier) {
+								let b = default_modifier.end;
+								const a = b - 7;
+								while (/\s/.test(module.dts[b])) b += 1;
+
+								module.result.remove(a, b);
+							}
 						}
 
 						const declare_modifier = node.modifiers?.find((node) => node.kind === 136);

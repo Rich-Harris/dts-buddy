@@ -54,32 +54,35 @@ export function write(file, contents) {
 /**
  * @param {string} file
  * @param {Record<string, string>} created
- * @returns {import('./types').Module}
  */
 export function get_dts(file, created) {
-	const authored = !(file in created);
-	const map_file = authored ? null : file + '.map';
-
 	const dts = created[file] ?? fs.readFileSync(file, 'utf8');
-	const map = map_file && JSON.parse(created[map_file]);
-
 	const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-
-	const source_file = map && path.resolve(path.dirname(file), map.sources[0]);
-	const source = source_file && fs.readFileSync(source_file, 'utf8');
+	const locator = getLocator(dts, { offsetLine: 1 });
+	const result = new MagicString(dts);
 
 	/** @type {import('./types').Module} */
 	const module = {
-		type: authored ? 'authored' : 'generated',
 		file,
 		dts,
-		source,
 		ast,
-		map,
-		mappings: map ? decode(map.mappings) : null,
-		locator: getLocator(dts, { offsetLine: 1 }),
-		result: new MagicString(dts)
+		locator,
+		result,
+		source: null
 	};
+
+	if (file in created) {
+		const map = JSON.parse(created[file + '.map']);
+
+		const source_file = path.resolve(path.dirname(file), map.sources[0]);
+		const code = fs.readFileSync(source_file, 'utf8');
+
+		module.source = {
+			code,
+			map,
+			mappings: decode(map.mappings)
+		};
+	}
 
 	return module;
 }

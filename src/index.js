@@ -99,7 +99,7 @@ export async function createBundle(options) {
 				const dts = created[file] ?? fs.readFileSync(file, 'utf8');
 				const map = map_file && JSON.parse(created[map_file]);
 
-				const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
+				const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 
 				const source_file = map && path.resolve(path.dirname(file), map.sources[0]);
 				const source = source_file && fs.readFileSync(source_file, 'utf8');
@@ -107,6 +107,7 @@ export async function createBundle(options) {
 				/** @type {import('./types').Module} */
 				const module = {
 					type: authored ? 'authored' : 'generated',
+					file,
 					dts,
 					source,
 					ast,
@@ -151,6 +152,35 @@ export async function createBundle(options) {
 
 			types += `declare module '${id}' {`;
 
+			/** @type {Set<string>} */
+			const names = new Set();
+
+			/** @param {string} name */
+			function get_name(name) {
+				let i = 1;
+				while (names.has(name)) {
+					name = `${name}_${i++}`;
+				}
+
+				names.add(name);
+				return name;
+			}
+
+			/** @type {Map<string, string>} */
+			const aliases = new Map();
+
+			/** @type {Map<string, string>} */
+			const export_from_aliases = new Map();
+
+			/** @param {string} name */
+			function get_alias(name) {
+				while (export_from_aliases.has(name) || aliases.has(name)) {
+					name = /** @type {string} */ (export_from_aliases.get(name) || aliases.get(name));
+				}
+
+				return name;
+			}
+
 			/** @type {Map<string, import('./types').Mapping>} */
 			const mappings = new Map();
 			all_mappings.set(id, mappings);
@@ -168,6 +198,7 @@ export async function createBundle(options) {
 			/** @type {import('./types').Module[]} */
 			const bundle = [];
 
+			// first pass — discovery
 			for (const file of included) {
 				const module = get_dts(file);
 
@@ -181,6 +212,120 @@ export async function createBundle(options) {
 
 				ts.forEachChild(module.ast, (node) => {
 					// follow imports
+					if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+						if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+							const { text } = node.moduleSpecifier;
+
+							// if a module imports from another module we're declaring,
+							// leave the import intact
+							if (text in modules) {
+								return;
+							}
+
+							// resolve relative imports and aliases (from tsconfig.paths)
+							const resolved = text.startsWith('.')
+								? resolve_dts(path.dirname(file), text)
+								: compilerOptions.paths && text in compilerOptions.paths
+								? resolve_dts(cwd, compilerOptions.paths[text][0])
+								: null;
+
+							if (resolved) {
+								// include this module
+								included.add(resolved);
+
+								if (ts.isImportDeclaration(node)) {
+									if (node.importClause) {
+										if (node.importClause.name) {
+											const name = node.importClause.name.getText(module.ast);
+											aliases.set(`${file}#${name}`, `${resolved}#default`);
+										} else if (node.importClause.namedBindings) {
+											if (ts.isNamespaceImport(node.importClause.namedBindings)) {
+												throw new Error('TODO namespace import');
+											} else {
+												node.importClause.namedBindings.forEachChild((specifier) => {
+													throw new Error('TODO named import');
+												});
+											}
+										}
+									} else {
+										// assume this is an ambient module
+										ambient_modules.add(resolved);
+									}
+								}
+
+								if (ts.isExportDeclaration(node)) {
+									if (node.exportClause) {
+										// export { x } from '...';
+										node.exportClause.forEachChild((specifier) => {
+											if (ts.isExportSpecifier(specifier)) {
+												const name = specifier.name.getText(module.ast);
+												const property = specifier.propertyName
+													? specifier.propertyName.getText(module.ast)
+													: name;
+
+												export_from_aliases.set(`${file}#${name}`, `${resolved}#${property}`);
+
+												exported.push(name);
+											}
+										});
+									} else {
+										// export * from '...';
+										modules_to_export_all_from.add(resolved);
+									}
+								}
+							}
+						}
+
+						return;
+					}
+
+					if (is_declaration(node)) {
+						const identifier = ts.isVariableStatement(node)
+							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
+							: ts.getNameOfDeclaration(node);
+
+						const name = identifier?.getText(module.ast);
+
+						if (identifier) {
+							const name = identifier.getText(module.ast);
+							exported.push(name);
+
+							aliases.set(`${file}#${name}`, get_name(name));
+						}
+
+						const export_modifier = node.modifiers?.find((node) => node.kind === 93);
+
+						if (export_modifier) {
+							// remove `default` keyword
+							const default_modifier = node.modifiers?.find((node) => node.kind === 88);
+							if (default_modifier) {
+								aliases.set(`${file}#default`, `${file}#${name}`);
+							}
+						}
+
+						walk(node, (node) => {
+							// `import('./foo').Foo` -> `Foo`
+							if (
+								ts.isImportTypeNode(node) &&
+								ts.isLiteralTypeNode(node.argument) &&
+								ts.isStringLiteral(node.argument.literal) &&
+								node.argument.literal.text.startsWith('.')
+							) {
+								// follow import
+								const resolved = resolve_dts(path.dirname(file), node.argument.literal.text);
+
+								included.add(resolved);
+							}
+						});
+					}
+				});
+
+				bundle.push(module);
+			}
+
+			// second pass — editing
+			for (const module of bundle) {
+				ts.forEachChild(module.ast, (node) => {
 					if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
 						if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
 							const { text } = node.moduleSpecifier;
@@ -199,38 +344,12 @@ export async function createBundle(options) {
 
 							// resolve relative imports and aliases (from tsconfig.paths)
 							const resolved = text.startsWith('.')
-								? resolve_dts(path.dirname(file), text)
+								? resolve_dts(path.dirname(module.file), text)
 								: compilerOptions.paths && text in compilerOptions.paths
 								? resolve_dts(cwd, compilerOptions.paths[text][0])
 								: null;
 
 							if (resolved) {
-								if (ts.isImportDeclaration(node) && !node.importClause) {
-									// assume this is an ambient module
-									ambient_modules.add(resolved);
-								} else {
-									included.add(resolved);
-								}
-
-								if (ts.isExportDeclaration(node)) {
-									if (node.exportClause) {
-										// export { x } from '...';
-										node.exportClause.forEachChild((specifier) => {
-											if (ts.isExportSpecifier(specifier)) {
-												if (specifier.propertyName) {
-													throw new Error(`export { x as y } is not yet implemented`);
-												}
-
-												const name = specifier.getText(module.ast);
-												exported.push(name);
-											}
-										});
-									} else {
-										// export * from '...';
-										modules_to_export_all_from.add(resolved);
-									}
-								}
-
 								module.result.remove(node.pos, node.end);
 							}
 						}
@@ -239,16 +358,25 @@ export async function createBundle(options) {
 					}
 
 					if (is_declaration(node)) {
+						const identifier = ts.isVariableStatement(node)
+							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
+							: ts.getNameOfDeclaration(node);
+
+						const name = identifier?.getText(module.ast);
+
 						const export_modifier = node.modifiers?.find((node) => node.kind === 93);
 						if (export_modifier) {
-							const identifier = ts.isVariableStatement(node)
-								? ts.getNameOfDeclaration(node.declarationList.declarations[0])
-								: ts.getNameOfDeclaration(node);
+							// remove `default` keyword
+							const default_modifier = node.modifiers?.find((node) => node.kind === 88);
+							if (default_modifier) {
+								let b = default_modifier.end;
+								const a = b - 7;
+								while (/\s/.test(module.dts[b])) b += 1;
 
-							if (identifier) {
-								const name = identifier.getText(module.ast);
-								exported.push(name);
+								module.result.remove(a, b);
+							}
 
+							if (identifier && name) {
 								const pos = identifier.getStart(module.ast);
 								const loc = module.locator(pos);
 
@@ -268,7 +396,7 @@ export async function createBundle(options) {
 
 									if (match) {
 										const mapping = {
-											source: path.resolve(path.dirname(file), module.map.sources[0]),
+											source: path.resolve(path.dirname(module.file), module.map.sources[0]),
 											line: l + 1,
 											column: match.index
 										};
@@ -279,7 +407,7 @@ export async function createBundle(options) {
 									}
 								} else {
 									const mapping = {
-										source: file,
+										source: module.file,
 										line: loc.line,
 										column: loc.column
 									};
@@ -289,21 +417,12 @@ export async function createBundle(options) {
 							}
 
 							// remove all export keywords in the initial pass; reinstate as necessary later
+							// TODO only do this for things that aren't exported from the entry point
 							let b = export_modifier.end;
 							const a = b - 6;
 							while (/\s/.test(module.dts[b])) b += 1;
 
 							module.result.remove(a, b);
-
-							// remove `default` keyword
-							const default_modifier = node.modifiers?.find((node) => node.kind === 88);
-							if (default_modifier) {
-								let b = default_modifier.end;
-								const a = b - 7;
-								while (/\s/.test(module.dts[b])) b += 1;
-
-								module.result.remove(a, b);
-							}
 						}
 
 						const declare_modifier = node.modifiers?.find((node) => node.kind === 136);
@@ -318,6 +437,15 @@ export async function createBundle(options) {
 						}
 
 						walk(node, (node) => {
+							if (is_reference(node)) {
+								const identifier = node.getText(module.ast);
+								const name = get_alias(`${module.file}#${identifier}`);
+
+								if (name !== identifier) {
+									module.result.overwrite(node.getStart(module.ast), node.getEnd(), name);
+								}
+							}
+
 							// `import('./foo').Foo` -> `Foo`
 							if (
 								ts.isImportTypeNode(node) &&
@@ -326,15 +454,14 @@ export async function createBundle(options) {
 								node.argument.literal.text.startsWith('.')
 							) {
 								// follow import
-								const resolved = resolve_dts(path.dirname(file), node.argument.literal.text);
+								const resolved = resolve_dts(path.dirname(module.file), node.argument.literal.text);
 
-								included.add(resolved);
+								// included.add(resolved);
 
 								// remove the `import(...)`
 								if (node.qualifier) {
-									let a = node.pos;
-									while (/\s/.test(module.dts[a])) a += 1;
-									module.result.remove(a, node.qualifier.pos);
+									const name = get_alias(`${resolved}#${node.qualifier.getText(module.ast)}`);
+									module.result.overwrite(node.getStart(module.ast), node.qualifier.end, name);
 								} else {
 									throw new Error('TODO');
 								}
@@ -360,10 +487,6 @@ export async function createBundle(options) {
 					}
 				});
 
-				bundle.push(module);
-			}
-
-			for (const module of bundle) {
 				const mod = module.result
 					.trim()
 					.indent()
@@ -524,4 +647,27 @@ function is_declaration(node) {
 		ts.isFunctionDeclaration(node) ||
 		ts.isVariableStatement(node)
 	);
+}
+
+/**
+ * @param {import('typescript').Node} node
+ * @returns {node is import('typescript').Identifier}
+ */
+function is_reference(node) {
+	if (!ts.isIdentifier(node)) return false;
+
+	if (node.parent) {
+		if (ts.isPropertyAccessExpression(node.parent)) return node === node.parent.expression;
+		if (ts.isPropertyDeclaration(node.parent)) return node === node.parent.initializer;
+		if (ts.isPropertyAssignment(node.parent)) return node === node.parent.initializer;
+
+		if (ts.isImportTypeNode(node.parent)) return false;
+		if (ts.isPropertySignature(node.parent)) return false;
+		if (ts.isParameter(node.parent)) return false;
+		if (ts.isMethodDeclaration(node.parent)) return false;
+		if (ts.isLabeledStatement(node.parent) || ts.isBreakOrContinueStatement(node.parent))
+			return false;
+	}
+
+	return true;
 }

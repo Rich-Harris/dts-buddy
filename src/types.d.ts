@@ -3,6 +3,7 @@ import MagicString from 'magic-string';
 
 export interface GeneratedModule {
 	type: 'generated';
+	file: string;
 	dts: string;
 	ast: import('typescript').SourceFile;
 	source: string;
@@ -14,6 +15,7 @@ export interface GeneratedModule {
 
 export interface AuthoredModule {
 	type: 'authored';
+	file: string;
 	dts: string;
 	ast: import('typescript').SourceFile;
 	source: null;

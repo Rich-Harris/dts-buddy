@@ -4,8 +4,7 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import { decode } from '@jridgewell/sourcemap-codec';
-import { get_input_files, write } from './utils.js';
+import { get_dts, get_input_files, write } from './utils.js';
 
 /**
  * @param {{
@@ -81,47 +80,6 @@ export async function createBundle(options) {
 		}
 
 		let types = '';
-
-		/**
-		 * @type {Map<string, import('./types').Module>}
-		 */
-		const cache = new Map();
-
-		/**
-		 * @param {string} file
-		 * @returns {import('./types').Module}
-		 */
-		function get_dts(file) {
-			const authored = !(file in created);
-			const map_file = authored ? null : file + '.map';
-
-			if (!cache.has(file)) {
-				const dts = created[file] ?? fs.readFileSync(file, 'utf8');
-				const map = map_file && JSON.parse(created[map_file]);
-
-				const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-
-				const source_file = map && path.resolve(path.dirname(file), map.sources[0]);
-				const source = source_file && fs.readFileSync(source_file, 'utf8');
-
-				/** @type {import('./types').Module} */
-				const module = {
-					type: authored ? 'authored' : 'generated',
-					file,
-					dts,
-					source,
-					ast,
-					map,
-					mappings: map ? decode(map.mappings) : null,
-					locator: getLocator(dts, { offsetLine: 1 }),
-					result: new MagicString(dts)
-				};
-
-				cache.set(file, module);
-			}
-
-			return /** @type {import('./types').Module} */ (cache.get(file));
-		}
 
 		/**
 		 * @param {string} from
@@ -200,7 +158,7 @@ export async function createBundle(options) {
 
 			// first pass — discovery
 			for (const file of included) {
-				const module = get_dts(file);
+				const module = get_dts(file, created);
 
 				/** @type {string[]} */
 				const exported = [];
@@ -509,7 +467,7 @@ export async function createBundle(options) {
 		}
 
 		for (const file of ambient_modules) {
-			const module = get_dts(file);
+			const module = get_dts(file, created);
 
 			const index = module.dts.indexOf('//# sourceMappingURL=');
 			if (index !== -1) module.result.remove(index, module.dts.length);

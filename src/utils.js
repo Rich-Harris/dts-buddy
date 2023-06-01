@@ -2,6 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 import globrex from 'globrex';
+import ts from 'typescript';
+import MagicString from 'magic-string';
+import { getLocator } from 'locate-character';
+import { decode } from '@jridgewell/sourcemap-codec';
 
 /**
  * @param {string} cwd
@@ -45,4 +49,37 @@ export function write(file, contents) {
 		fs.mkdirSync(path.dirname(file), { recursive: true });
 	} catch {}
 	fs.writeFileSync(file, contents);
+}
+
+/**
+ * @param {string} file
+ * @param {Record<string, string>} created
+ * @returns {import('./types').Module}
+ */
+export function get_dts(file, created) {
+	const authored = !(file in created);
+	const map_file = authored ? null : file + '.map';
+
+	const dts = created[file] ?? fs.readFileSync(file, 'utf8');
+	const map = map_file && JSON.parse(created[map_file]);
+
+	const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+
+	const source_file = map && path.resolve(path.dirname(file), map.sources[0]);
+	const source = source_file && fs.readFileSync(source_file, 'utf8');
+
+	/** @type {import('./types').Module} */
+	const module = {
+		type: authored ? 'authored' : 'generated',
+		file,
+		dts,
+		source,
+		ast,
+		map,
+		mappings: map ? decode(map.mappings) : null,
+		locator: getLocator(dts, { offsetLine: 1 }),
+		result: new MagicString(dts)
+	};
+
+	return module;
 }

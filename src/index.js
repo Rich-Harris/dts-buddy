@@ -4,7 +4,7 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import { get_dts, get_input_files, write } from './utils.js';
+import { get_dts, get_input_files, resolve_dts, write } from './utils.js';
 
 /**
  * @param {{
@@ -80,18 +80,6 @@ export async function createBundle(options) {
 		}
 
 		let types = '';
-
-		/**
-		 * @param {string} from
-		 * @param {string} to
-		 */
-		function resolve_dts(from, to) {
-			const file = path.resolve(from, to);
-			if (file.endsWith('.d.ts')) return file;
-			if (file.endsWith('.ts')) return file.replace(/\.ts$/, '.d.ts');
-			if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
-			return file + '.d.ts';
-		}
 
 		/** @type {Map<string, string[]>} **/
 		const all_exports = new Map();

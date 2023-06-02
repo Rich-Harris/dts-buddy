@@ -86,3 +86,15 @@ export function get_dts(file, created) {
 
 	return module;
 }
+
+/**
+ * @param {string} from
+ * @param {string} to
+ */
+export function resolve_dts(from, to) {
+	const file = path.resolve(from, to);
+	if (file.endsWith('.d.ts')) return file;
+	if (file.endsWith('.ts')) return file.replace(/\.ts$/, '.d.ts');
+	if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
+	return file + '.d.ts';
+}

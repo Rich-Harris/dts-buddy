@@ -4,7 +4,15 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import { get_dts, get_input_files, resolve_dts, write } from './utils.js';
+import {
+	get_dts,
+	get_input_files,
+	is_declaration,
+	is_reference,
+	resolve_dts,
+	walk,
+	write
+} from './utils.js';
 
 /**
  * @param {{
@@ -92,11 +100,129 @@ export async function createBundle(options) {
 
 		let first = true;
 
+		/**
+		 * @param {string} file
+		 * @param {string} specifier
+		 * @returns {string | null}
+		 */
+		function resolve(file, specifier) {
+			// if a module imports from another module we're declaring,
+			// leave the import intact
+			if (specifier in modules) {
+				return null;
+			}
+
+			// resolve relative imports and aliases (from tsconfig.paths)
+			return specifier.startsWith('.')
+				? resolve_dts(path.dirname(file), specifier)
+				: compilerOptions.paths && specifier in compilerOptions.paths
+				? resolve_dts(cwd, compilerOptions.paths[specifier][0])
+				: null;
+		}
+
 		for (const id in modules) {
 			if (!first) types += '\n\n';
 			first = false;
 
 			types += `declare module '${id}' {`;
+
+			/** @type {Map<string, import('./types').Mapping>} */
+			const mappings = new Map();
+			all_mappings.set(id, mappings);
+
+			const included = new Set([modules[id]]);
+
+			/** @type {Map<string, import('./types').Module>} */
+			const bundle = new Map();
+
+			/** @type {Map<string, Map<string, string>>} */
+			const traced = new Map();
+
+			// first pass — discovery
+			for (const file of included) {
+				const module = get_dts(file, created, resolve);
+
+				module.dependencies.forEach((dep) => {
+					included.add(dep);
+				});
+
+				module.ambient_imports.forEach((dep) => {
+					if (!dep.external) {
+						ambient_modules.add(dep.id);
+					}
+				});
+
+				bundle.set(file, module);
+				traced.set(file, new Map());
+			}
+
+			// TODO treeshaking
+
+			const exports = new Set();
+
+			/**
+			 * @param {string} id
+			 * @param {string} name
+			 * @param {string} alias
+			 */
+			function assign_alias(id, name, alias) {
+				const module = bundle.get(id);
+
+				if (module) {
+					if (module.exports.has(name)) {
+						const local = /** @type {string} */ (module.exports.get(name));
+
+						const declaration = module.declarations.get(local);
+						if (declaration) {
+							declaration.alias = alias;
+							return true;
+						}
+
+						const binding = module.imports.get(local);
+						if (binding) {
+							assign_alias(binding.id, binding.name, alias);
+							return true;
+						}
+
+						throw new Error('Something unexpected happened');
+					}
+
+					const binding = module.export_from.get(name);
+					if (binding) {
+						assign_alias(binding.id, binding.name, alias);
+						return true;
+					}
+
+					for (const reference of module.export_all) {
+						if (assign_alias(reference.id, name, alias)) {
+							return true;
+						}
+					}
+				} else {
+					// this is an import from an external module
+					throw new Error('TODO imports from external modules');
+				}
+			}
+
+			/** @type {Set<import('./types').Module>} */
+			const modules_to_export_all_from = new Set([
+				/** @type {import('./types').Module} */ (bundle.get(modules[id]))
+			]);
+
+			for (const module of modules_to_export_all_from) {
+				for (const exported of module.exports.keys()) {
+					exports.add(exported);
+				}
+
+				for (const exported of module.export_from.keys()) {
+					exports.add(exported);
+				}
+
+				for (const next of module.export_all) {
+					const m = bundle.get(next.id);
+					if (m) modules_to_export_all_from.add(m);
+				}
+			}
 
 			/** @type {Set<string>} */
 			const names = new Set();
@@ -112,116 +238,61 @@ export async function createBundle(options) {
 				return name;
 			}
 
-			/** @type {Map<string, string>} */
-			const aliases = new Map();
-
-			/** @type {Map<string, string>} */
-			const export_from_aliases = new Map();
-
-			/** @param {string} name */
-			function get_alias(name) {
-				while (export_from_aliases.has(name) || aliases.has(name)) {
-					name = /** @type {string} */ (export_from_aliases.get(name) || aliases.get(name));
-				}
-
-				return name;
+			// fix export names initially...
+			for (const name of exports) {
+				assign_alias(modules[id], name, get_name(name));
 			}
 
-			/** @type {Map<string, import('./types').Mapping>} */
-			const mappings = new Map();
-			all_mappings.set(id, mappings);
-
-			const included = new Set([modules[id]]);
+			// ...then deconflict everything else
+			for (const module of bundle.values()) {
+				for (const declaration of module.declarations.values()) {
+					if (!declaration.alias) {
+						declaration.alias = get_name(declaration.name);
+					}
+				}
+			}
 
 			/**
-			 * A map of module IDs to the names of the things they export
-			 * @type {Map<string, string[]>}
+			 * @param {string} id
+			 * @param {string} name
+			 * @returns {string} TODO or an external import
 			 */
-			const module_exports = new Map();
+			function trace(id, name) {
+				const cache = /** @type {Map<string, string>} */ (traced.get(id));
 
-			const modules_to_export_all_from = new Set([modules[id]]);
+				if (cache.has(name)) {
+					return /** @type {string} */ (cache.get(name));
+				}
 
-			/** @type {import('./types').Module[]} */
-			const bundle = [];
+				const module = bundle.get(id);
+				if (module) {
+					const declaration = module.declarations.get(name);
+					if (declaration) {
+						cache.set(name, declaration.alias);
+						return declaration.alias;
+					}
 
-			// first pass — discovery
-			for (const file of included) {
-				const module = get_dts(file, created);
+					const binding = module.imports.get(name) ?? module.export_from.get(name);
+					if (binding) {
+						const alias = trace(binding.id, binding.name);
+						cache.set(name, alias);
+						return alias;
+					}
 
-				/** @type {string[]} */
-				const exported = [];
+					throw new Error('TODO');
+				} else {
+					throw new Error('TODO external imports');
+				}
+			}
 
-				module_exports.set(file, exported);
-
+			// second pass — editing
+			for (const module of bundle.values()) {
 				const index = module.dts.indexOf('//# sourceMappingURL=');
 				if (index !== -1) module.result.remove(index, module.dts.length);
 
 				ts.forEachChild(module.ast, (node) => {
-					// follow imports
 					if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-						if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-							const { text } = node.moduleSpecifier;
-
-							// if a module imports from another module we're declaring,
-							// leave the import intact
-							if (text in modules) {
-								return;
-							}
-
-							// resolve relative imports and aliases (from tsconfig.paths)
-							const resolved = text.startsWith('.')
-								? resolve_dts(path.dirname(file), text)
-								: compilerOptions.paths && text in compilerOptions.paths
-								? resolve_dts(cwd, compilerOptions.paths[text][0])
-								: null;
-
-							if (resolved) {
-								// include this module
-								included.add(resolved);
-
-								if (ts.isImportDeclaration(node)) {
-									if (node.importClause) {
-										if (node.importClause.name) {
-											const name = node.importClause.name.getText(module.ast);
-											aliases.set(`${file}#${name}`, `${resolved}#default`);
-										} else if (node.importClause.namedBindings) {
-											if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-												throw new Error('TODO namespace import');
-											} else {
-												node.importClause.namedBindings.forEachChild((specifier) => {
-													throw new Error('TODO named import');
-												});
-											}
-										}
-									} else {
-										// assume this is an ambient module
-										ambient_modules.add(resolved);
-									}
-								}
-
-								if (ts.isExportDeclaration(node)) {
-									if (node.exportClause) {
-										// export { x } from '...';
-										node.exportClause.forEachChild((specifier) => {
-											if (ts.isExportSpecifier(specifier)) {
-												const name = specifier.name.getText(module.ast);
-												const property = specifier.propertyName
-													? specifier.propertyName.getText(module.ast)
-													: name;
-
-												export_from_aliases.set(`${file}#${name}`, `${resolved}#${property}`);
-
-												exported.push(name);
-											}
-										});
-									} else {
-										// export * from '...';
-										modules_to_export_all_from.add(resolved);
-									}
-								}
-							}
-						}
-
+						module.result.remove(node.pos, node.end);
 						return;
 					}
 
@@ -231,84 +302,17 @@ export async function createBundle(options) {
 							: ts.getNameOfDeclaration(node);
 
 						const name = identifier?.getText(module.ast);
-
-						if (identifier) {
-							const name = identifier.getText(module.ast);
-							exported.push(name);
-
-							aliases.set(`${file}#${name}`, get_name(name));
+						if (!name) {
+							throw new Error('TODO');
 						}
 
-						const export_modifier = node.modifiers?.find((node) => node.kind === 93);
+						const declaration = /** @type {import('./types').Declaration} */ (
+							module.declarations.get(name)
+						);
 
-						if (export_modifier) {
-							// remove `default` keyword
-							const default_modifier = node.modifiers?.find((node) => node.kind === 88);
-							if (default_modifier) {
-								aliases.set(`${file}#default`, `${file}#${name}`);
-							}
+						if (declaration.alias !== declaration.name) {
+							throw new Error('TODO rename declaration');
 						}
-
-						walk(node, (node) => {
-							// `import('./foo').Foo` -> `Foo`
-							if (
-								ts.isImportTypeNode(node) &&
-								ts.isLiteralTypeNode(node.argument) &&
-								ts.isStringLiteral(node.argument.literal) &&
-								node.argument.literal.text.startsWith('.')
-							) {
-								// follow import
-								const resolved = resolve_dts(path.dirname(file), node.argument.literal.text);
-
-								included.add(resolved);
-							}
-						});
-					}
-				});
-
-				bundle.push(module);
-			}
-
-			// second pass — editing
-			for (const module of bundle) {
-				ts.forEachChild(module.ast, (node) => {
-					if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-						if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-							const { text } = node.moduleSpecifier;
-
-							// if a module imports from the module we're currently declaring,
-							// just remove the import altogether
-							if (text === id) {
-								module.result.remove(node.pos, node.end);
-							}
-
-							// if a module imports from another module we're declaring,
-							// leave the import intact
-							if (text in modules) {
-								return;
-							}
-
-							// resolve relative imports and aliases (from tsconfig.paths)
-							const resolved = text.startsWith('.')
-								? resolve_dts(path.dirname(module.file), text)
-								: compilerOptions.paths && text in compilerOptions.paths
-								? resolve_dts(cwd, compilerOptions.paths[text][0])
-								: null;
-
-							if (resolved) {
-								module.result.remove(node.pos, node.end);
-							}
-						}
-
-						return;
-					}
-
-					if (is_declaration(node)) {
-						const identifier = ts.isVariableStatement(node)
-							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
-							: ts.getNameOfDeclaration(node);
-
-						const name = identifier?.getText(module.ast);
 
 						const export_modifier = node.modifiers?.find((node) => node.kind === 93);
 						if (export_modifier) {
@@ -318,35 +322,28 @@ export async function createBundle(options) {
 								let b = default_modifier.end;
 								const a = b - 7;
 								while (/\s/.test(module.dts[b])) b += 1;
-
 								module.result.remove(a, b);
 							}
-
 							if (identifier && name) {
 								const pos = identifier.getStart(module.ast);
 								const loc = module.locator(pos);
-
 								if (module.source) {
 									// the sourcemaps generated by TypeScript are very inaccurate, borderline useless.
 									// we need to fix them up here. TODO is it only inaccurate in the JSDoc case?
 									const segments = module.source.mappings?.[loc.line - 1];
-
 									// find the segments immediately before and after the generated column
 									const index = segments.findIndex((segment) => segment[0] >= loc.column);
 									const a = segments[index - 1] ?? segments[0];
 									let l = /** @type {number} */ (a[2]);
-
 									const source_line = module.source.code.split('\n')[l];
 									const regex = new RegExp(`\\b${name}\\b`);
 									const match = regex.exec(source_line);
-
 									if (match) {
 										const mapping = {
 											source: path.resolve(path.dirname(module.file), module.source.map.sources[0]),
 											line: l + 1,
 											column: match.index
 										};
-
 										mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
 									} else {
 										// TODO figure out how to repair sourcemaps in this case
@@ -357,18 +354,20 @@ export async function createBundle(options) {
 										line: loc.line,
 										column: loc.column
 									};
-
 									mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
 								}
 							}
 
-							// remove all export keywords in the initial pass; reinstate as necessary later
-							// TODO only do this for things that aren't exported from the entry point
-							let b = export_modifier.end;
-							const a = b - 6;
-							while (/\s/.test(module.dts[b])) b += 1;
-
-							module.result.remove(a, b);
+							if (!exports.has(name)) {
+								// remove all export keywords in the initial pass; reinstate as necessary later
+								// TODO only do this for things that aren't exported from the entry point
+								let b = export_modifier.end;
+								const a = b - 6;
+								while (/\s/.test(module.dts[b])) b += 1;
+								module.result.remove(a, b);
+							}
+						} else if (exports.has(name)) {
+							throw new Error('TODO add export keyword');
 						}
 
 						const declare_modifier = node.modifiers?.find((node) => node.kind === 136);
@@ -378,16 +377,15 @@ export async function createBundle(options) {
 							let b = declare_modifier.end;
 							const a = b - 7;
 							while (/\s/.test(module.dts[b])) b += 1;
-
 							module.result.remove(a, b);
 						}
 
 						walk(node, (node) => {
 							if (is_reference(node)) {
-								const identifier = node.getText(module.ast);
-								const name = get_alias(`${module.file}#${identifier}`);
+								const name = node.getText(module.ast);
+								const alias = trace(module.file, name);
 
-								if (name !== identifier) {
+								if (alias !== name) {
 									module.result.overwrite(node.getStart(module.ast), node.getEnd(), name);
 								}
 							}
@@ -403,10 +401,11 @@ export async function createBundle(options) {
 								const resolved = resolve_dts(path.dirname(module.file), node.argument.literal.text);
 
 								// included.add(resolved);
-
 								// remove the `import(...)`
 								if (node.qualifier) {
-									const name = get_alias(`${resolved}#${node.qualifier.getText(module.ast)}`);
+									const name = node.qualifier.getText(module.ast);
+									const alias = trace(resolved, name);
+
 									module.result.overwrite(node.getStart(module.ast), node.qualifier.end, name);
 								} else {
 									throw new Error('TODO');
@@ -441,47 +440,45 @@ export async function createBundle(options) {
 				if (mod) types += '\n' + mod;
 			}
 
-			/** @type {string[]} */
-			const exported = [];
-			all_exports.set(id, exported);
+			// /** @type {string[]} */
+			// const exported = [];
+			// all_exports.set(id, exported);
 
-			for (const id of modules_to_export_all_from) {
-				for (const name of /** @type {string[]} */ (module_exports.get(id))) {
-					exported.push(name);
-				}
-			}
+			// for (const id of modules_to_export_all_from) {
+			// 	for (const name of /** @type {string[]} */ (module_exports.get(id))) {
+			// 		exported.push(name);
+			// 	}
+			// }
 
 			types += `\n}`;
 		}
 
 		for (const file of ambient_modules) {
-			const module = get_dts(file, created);
-
-			const index = module.dts.indexOf('//# sourceMappingURL=');
-			if (index !== -1) module.result.remove(index, module.dts.length);
-
-			ts.forEachChild(module.ast, (node) => {
-				if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
-					walk(node, (node) => {
-						// @ts-expect-error
-						if (node.jsDoc) {
-							// @ts-expect-error
-							for (const jsDoc of node.jsDoc) {
-								if (jsDoc.comment) {
-									// @ts-expect-error
-									jsDoc.tags?.forEach((tag) => {
-										module.result.remove(tag.pos, tag.end);
-									});
-								} else {
-									module.result.remove(jsDoc.pos, jsDoc.end);
-								}
-							}
-						}
-					});
-				}
-			});
-
-			types += module.result.trim().toString();
+			// TODO clean up ambient module then inject wholesale
+			// const module = get_dts(file, created);
+			// const index = module.dts.indexOf('//# sourceMappingURL=');
+			// if (index !== -1) module.result.remove(index, module.dts.length);
+			// ts.forEachChild(module.ast, (node) => {
+			// 	if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+			// 		walk(node, (node) => {
+			// 			// @ts-expect-error
+			// 			if (node.jsDoc) {
+			// 				// @ts-expect-error
+			// 				for (const jsDoc of node.jsDoc) {
+			// 					if (jsDoc.comment) {
+			// 						// @ts-expect-error
+			// 						jsDoc.tags?.forEach((tag) => {
+			// 							module.result.remove(tag.pos, tag.end);
+			// 						});
+			// 					} else {
+			// 						module.result.remove(jsDoc.pos, jsDoc.end);
+			// 					}
+			// 				}
+			// 			}
+			// 		});
+			// 	}
+			// });
+			// types += module.result.trim().toString();
 		}
 
 		// finally, add back exports as appropriate
@@ -499,9 +496,6 @@ export async function createBundle(options) {
 
 				const name = node.name.text;
 
-				const exported = all_exports.get(name);
-				if (!exported) return;
-
 				const mappings = all_mappings.get(name);
 
 				node.body.forEachChild((node) => {
@@ -512,17 +506,12 @@ export async function createBundle(options) {
 
 						if (identifier) {
 							const name = identifier.getText(ast);
-							if (exported.includes(name)) {
-								const start = node.getStart(ast);
-								magic_string.prependRight(start, 'export ');
-							}
 
 							const mapping = mappings?.get(name);
 
 							if (mapping) {
 								const start = identifier.getStart(ast);
 								let { line, column } = locator(start);
-								if (exported.includes(name)) column += 7;
 
 								const relative = path.relative(path.dirname(output), mapping.source);
 
@@ -564,56 +553,4 @@ export async function createBundle(options) {
 	} finally {
 		process.chdir(original_cwd);
 	}
-}
-
-/**
- * @param {import('typescript').Node} node
- * @param {(node: import('typescript').Node) => void} callback
- */
-function walk(node, callback) {
-	callback(node);
-	ts.forEachChild(node, (child) => walk(child, callback));
-}
-
-/**
- * @param {import('typescript').Node} node
- * @returns {node is
- *   import('typescript').InterfaceDeclaration |
- *   import('typescript').TypeAliasDeclaration |
- *   import('typescript').ClassDeclaration |
- *   import('typescript').FunctionDeclaration |
- *   import('typescript').VariableStatement
- * }
- */
-function is_declaration(node) {
-	return (
-		ts.isInterfaceDeclaration(node) ||
-		ts.isTypeAliasDeclaration(node) ||
-		ts.isClassDeclaration(node) ||
-		ts.isFunctionDeclaration(node) ||
-		ts.isVariableStatement(node)
-	);
-}
-
-/**
- * @param {import('typescript').Node} node
- * @returns {node is import('typescript').Identifier}
- */
-function is_reference(node) {
-	if (!ts.isIdentifier(node)) return false;
-
-	if (node.parent) {
-		if (ts.isPropertyAccessExpression(node.parent)) return node === node.parent.expression;
-		if (ts.isPropertyDeclaration(node.parent)) return node === node.parent.initializer;
-		if (ts.isPropertyAssignment(node.parent)) return node === node.parent.initializer;
-
-		if (ts.isImportTypeNode(node.parent)) return false;
-		if (ts.isPropertySignature(node.parent)) return false;
-		if (ts.isParameter(node.parent)) return false;
-		if (ts.isMethodDeclaration(node.parent)) return false;
-		if (ts.isLabeledStatement(node.parent) || ts.isBreakOrContinueStatement(node.parent))
-			return false;
-	}
-
-	return true;
 }

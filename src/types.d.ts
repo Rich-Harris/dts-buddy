@@ -1,5 +1,4 @@
 import { SourceMapMappings } from '@jridgewell/sourcemap-codec';
-import MagicString from 'magic-string';
 import * as ts from 'typescript';
 
 interface Declaration {

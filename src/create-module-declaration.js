@@ -327,9 +327,20 @@ export function create_module_declaration(id, entry, created, resolve) {
 					result.remove(a, b);
 				}
 
+				const params = new Set();
+				if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+					if (node.typeParameters) {
+						for (const param of node.typeParameters) {
+							params.add(param.getText(module.ast));
+						}
+					}
+				}
+
 				walk(node, (node) => {
 					if (is_reference(node)) {
 						const name = node.getText(module.ast);
+						if (params.has(name)) return;
+
 						const alias = trace(module.file, name);
 
 						if (alias !== name) {

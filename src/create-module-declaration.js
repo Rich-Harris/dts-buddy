@@ -150,6 +150,19 @@ export function create_module_declaration(id, entry, created, resolve) {
 		assign_alias(entry, name, get_name(name));
 	}
 
+	// ...and imported bindings...
+	for (const id in imports) {
+		for (const name in imports[id]) {
+			imports[id][name] = get_name(name);
+		}
+	}
+
+	for (const id in import_alls) {
+		for (const name in import_alls[id]) {
+			import_alls[id][name] = get_name(name);
+		}
+	}
+
 	// ...then deconflict everything else
 	for (const module of bundle.values()) {
 		for (const declaration of module.declarations.values()) {
@@ -165,7 +178,12 @@ export function create_module_declaration(id, entry, created, resolve) {
 	 * @returns {string} TODO or an external import
 	 */
 	function trace(id, name) {
-		const cache = /** @type {Map<string, string>} */ (traced.get(id));
+		const cache = traced.get(id);
+
+		if (!cache) {
+			// this means we're dealing with an external module
+			return imports[id][name] ?? import_alls[id][name];
+		}
 
 		if (cache.has(name)) {
 			return /** @type {string} */ (cache.get(name));
@@ -193,6 +211,24 @@ export function create_module_declaration(id, entry, created, resolve) {
 	}
 
 	let content = `declare module '${id}' {`;
+
+	// inject imports from external modules
+	for (const id in imports) {
+		const specifiers = Object.keys(imports[id]).map((name) => {
+			const alias = imports[id][name];
+			return name === alias ? name : `${name} as ${alias}`;
+		});
+
+		for (const name in imports[id]) {
+			content += `\n\timport type { ${specifiers.join(', ')} } from '${id}';`;
+		}
+	}
+
+	for (const id in import_alls) {
+		for (const name in import_alls[id]) {
+			content += `\n\timport * as ${name} from '${id}';`; // TODO could this have been aliased?
+		}
+	}
 
 	// second pass — editing
 	for (const module of bundle.values()) {

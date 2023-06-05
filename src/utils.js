@@ -60,7 +60,6 @@ export function get_dts(file, created, resolve) {
 	const dts = created[file] ?? fs.readFileSync(file, 'utf8');
 	const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 	const locator = getLocator(dts, { offsetLine: 1 });
-	const result = new MagicString(dts);
 
 	/** @type {import('./types').Module} */
 	const module = {
@@ -68,7 +67,6 @@ export function get_dts(file, created, resolve) {
 		dts,
 		ast,
 		locator,
-		result,
 		source: null,
 		dependencies: [],
 		declarations: new Map(),
@@ -160,9 +158,9 @@ export function get_dts(file, created, resolve) {
 									? specifier.propertyName.getText(module.ast)
 									: name;
 
-								module.export_from.set(local, {
+								module.export_from.set(name, {
 									id,
-									name,
+									name: local,
 									external,
 									referenced: false
 								});

@@ -13,15 +13,23 @@ for (const sample of fs.readdirSync('test/samples')) {
 		const dir = `test/samples/${sample}`;
 
 		const modules = JSON.parse(fs.readFileSync(`${dir}/modules.json`, 'utf-8'));
+
+		const compilerOptions = {
+			paths: {}
+		};
+
 		for (const [name, value] of Object.entries(modules)) {
 			modules[name] = `${dir}/input/${value}`;
+			compilerOptions.paths[name] = [`./samples/${sample}/input/${value}`];
 		}
 
 		await createBundle({
-			project: `${dir}/tsconfig.json`,
-			output: `${dir}/actual/index.d.ts`,
+			project: 'test/tsconfig.json',
 			modules,
-			debug: `${dir}/debug`
+			output: `${dir}/actual/index.d.ts`,
+			debug: `${dir}/debug`,
+			include: [`samples/${sample}/input`],
+			compilerOptions
 		});
 
 		const actual = glob('**', { cwd: `${dir}/actual`, filesOnly: true }).sort();

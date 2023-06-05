@@ -20,6 +20,7 @@ import { create_module_declaration } from './create-module-declaration.js';
  *   output: string;
  *   modules: Record<string, string>;
  *   project?: string;
+ *   compilerOptions?: ts.CompilerOptions;
  *   include?: string[];
  *   exclude?: string[];
  *   debug?: string;
@@ -53,6 +54,7 @@ export async function createBundle(options) {
 		/** @type {ts.CompilerOptions} */
 		const compilerOptions = {
 			...tsconfig.compilerOptions,
+			...options.compilerOptions,
 			allowJs: true,
 			checkJs: true,
 			declaration: true,

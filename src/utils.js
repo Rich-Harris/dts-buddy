@@ -91,7 +91,8 @@ export function get_dts(file, created, resolve) {
 		};
 	}
 
-	ts.forEachChild(ast, (node) => {
+	/** @param {import('typescript').Node} node */
+	function scan(node) {
 		// follow imports
 		if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
 			if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
@@ -245,11 +246,19 @@ export function get_dts(file, created, resolve) {
 			return;
 		}
 
+		// `namespace foo {...}`
+		if (ts.isModuleDeclaration(node) && node.flags & 16) {
+			node.body?.statements?.forEach(scan);
+			return;
+		}
+
 		// EOF
 		if (node.kind === 1) return;
 
 		throw new Error(`Unimplemented node type ${node.kind}`);
-	});
+	}
+
+	ast.statements.forEach(scan);
 
 	return module;
 }

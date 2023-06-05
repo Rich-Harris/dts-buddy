@@ -204,7 +204,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 				return alias;
 			}
 
-			throw new Error('TODO');
+			throw new Error(`Could not trace ${name} binding from ${id}`);
 		} else {
 			throw new Error('TODO external imports');
 		}

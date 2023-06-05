@@ -32,7 +32,6 @@ export interface Module {
 	dts: string;
 	ast: import('typescript').SourceFile;
 	locator: (pos: number) => import('locate-character').Location;
-	result: MagicString;
 	source: null | {
 		code: string;
 		map: any; // TODO

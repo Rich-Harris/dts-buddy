@@ -35,5 +35,5 @@
 		"types"
 	],
 	"bin": "./src/cli.js",
-	"packageManager": "pnpm@8.5.1"
+	"packageManager": "pnpm@8.6.1"
 }

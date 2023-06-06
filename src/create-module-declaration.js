@@ -44,25 +44,25 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/** @type {Set<string>} */
 	const exports = new Set();
 
-	/**
-	 * @param {string} module
-	 * @param {string} name
-	 * @returns {import('./types').Declaration}
-	 */
-	function create_external_declaration(module, name) {
-		return {
-			module,
-			name,
-			alias: '',
-			external: true,
-			included: false,
-			references: new Set()
-		};
-	}
-
 	// step 1 — discover which modules are included in the bundle
 	{
 		const included = new Set([entry]);
+
+		/**
+		 * @param {string} module
+		 * @param {string} name
+		 * @returns {import('./types').Declaration}
+		 */
+		const create_external_declaration = (module, name) => {
+			return {
+				module,
+				name,
+				alias: '',
+				external: true,
+				included: false,
+				references: new Set()
+			};
+		};
 
 		for (const file of included) {
 			const module = get_dts(file, created, resolve);
@@ -152,7 +152,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 			}
 		};
 
-		// treeshaking
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration) reference(declaration.module, declaration.name);
@@ -166,7 +165,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		 * @param {string} name
 		 * @param {string} alias
 		 */
-		function assign_alias(id, name, alias) {
+		const assign_alias = (id, name, alias) => {
 			const module = bundle.get(id);
 
 			if (module) {
@@ -207,7 +206,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 				declaration.alias = alias;
 			}
-		}
+		};
 
 		/** @type {Set<string>} */
 		const names = new Set();

@@ -113,9 +113,12 @@ export function get_dts(file, created, resolve) {
 							const name = node.importClause.name.getText(module.ast);
 							module.imports.set(name, {
 								id,
-								name: 'default',
 								external,
-								referenced: false
+								declaration: {
+									name: 'default',
+									alias: '',
+									included: false
+								}
 							});
 						} else if (node.importClause.namedBindings) {
 							// `import * as foo`
@@ -123,9 +126,12 @@ export function get_dts(file, created, resolve) {
 								const name = node.importClause.namedBindings.name.getText(module.ast);
 								module.import_all.set(name, {
 									id,
-									name,
 									external,
-									referenced: false
+									declaration: {
+										name,
+										alias: '',
+										included: false
+									}
 								});
 							}
 
@@ -136,9 +142,12 @@ export function get_dts(file, created, resolve) {
 
 									module.imports.set(local, {
 										id,
-										name: specifier.propertyName?.getText(module.ast) ?? local,
 										external,
-										referenced: false
+										declaration: {
+											name: specifier.propertyName?.getText(module.ast) ?? local,
+											alias: '',
+											included: false
+										}
 									});
 								});
 							}
@@ -161,9 +170,12 @@ export function get_dts(file, created, resolve) {
 
 								module.export_from.set(name, {
 									id,
-									name: local,
 									external,
-									referenced: false
+									declaration: {
+										name: local,
+										alias: '',
+										included: false
+									}
 								});
 							});
 						}
@@ -211,11 +223,9 @@ export function get_dts(file, created, resolve) {
 
 			/** @type {import('./types').Declaration} */
 			const declaration = {
-				node,
 				name,
-				references: new Set(),
-				is_referenced: false,
-				alias: ''
+				alias: '',
+				included: false
 			};
 
 			module.declarations.set(name, declaration);

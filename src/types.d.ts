@@ -1,24 +1,15 @@
 import { SourceMapMappings } from '@jridgewell/sourcemap-codec';
-import * as ts from 'typescript';
 
 interface Declaration {
-	node:
-		| ts.InterfaceDeclaration
-		| ts.TypeAliasDeclaration
-		| ts.FunctionDeclaration
-		| ts.ClassDeclaration
-		| ts.VariableStatement;
 	name: string;
-	references: Set<string>;
-	is_referenced: boolean;
 	alias: string;
+	included: boolean;
 }
 
 interface Binding {
 	id: string;
-	name: string;
 	external: boolean;
-	referenced: boolean;
+	declaration: Declaration;
 }
 
 interface ModuleReference {

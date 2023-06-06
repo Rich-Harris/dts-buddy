@@ -51,11 +51,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 			}
 
 			for (const binding of module.imports.values()) {
-				(imports[binding.id] ??= {})[binding.name] = '';
+				(imports[binding.id] ??= {})[binding.declaration.name] = '';
 			}
 
 			for (const binding of module.import_all.values()) {
-				(import_alls[binding.id] ??= {})[binding.name] = '';
+				(import_alls[binding.id] ??= {})[binding.declaration.name] = '';
 			}
 
 			bundle.set(file, module);
@@ -87,7 +87,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 				const binding = module.imports.get(local);
 				if (binding) {
-					assign_alias(binding.id, binding.name, alias);
+					assign_alias(binding.id, binding.declaration.name, alias);
 					return true;
 				}
 
@@ -96,7 +96,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			const binding = module.export_from.get(name);
 			if (binding) {
-				assign_alias(binding.id, binding.name, alias);
+				assign_alias(binding.id, binding.declaration.name, alias);
 				return true;
 			}
 
@@ -199,7 +199,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			const binding = module.imports.get(name) ?? module.export_from.get(name);
 			if (binding) {
-				const alias = trace(binding.id, binding.name);
+				const alias = trace(binding.id, binding.declaration.name);
 				cache.set(name, alias);
 				return alias;
 			}

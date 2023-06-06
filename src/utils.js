@@ -307,6 +307,14 @@ export function is_reference(node) {
 	if (!ts.isIdentifier(node)) return false;
 
 	if (node.parent) {
+		if (is_declaration(node.parent)) {
+			if (ts.isVariableStatement(node.parent)) {
+				return node === node.parent.declarationList.declarations[0].name;
+			}
+
+			return node === node.parent.name;
+		}
+
 		if (ts.isPropertyAccessExpression(node.parent)) return node === node.parent.expression;
 		if (ts.isPropertyDeclaration(node.parent)) return node === node.parent.initializer;
 		if (ts.isPropertyAssignment(node.parent)) return node === node.parent.initializer;

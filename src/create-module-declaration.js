@@ -437,7 +437,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 						}
 					}
 
-					if (!exports.has(name)) {
+					if (!exports.has(declaration.alias)) {
 						// remove all export keywords in the initial pass; reinstate as necessary later
 						// TODO only do this for things that aren't exported from the entry point
 						let b = export_modifier.end;
@@ -476,7 +476,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 						const declaration = trace(module.file, name);
 
 						if (declaration.alias !== name) {
-							result.overwrite(node.getStart(module.ast), node.getEnd(), name);
+							result.overwrite(node.getStart(module.ast), node.getEnd(), declaration.alias);
 						}
 					}
 

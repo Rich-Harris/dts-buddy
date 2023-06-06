@@ -1,3 +1,1 @@
-export const x = {
-	y: 1
-};
+export { a } from './foo.js';

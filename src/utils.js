@@ -245,12 +245,6 @@ export function get_dts(file, created, resolve) {
 			return;
 		}
 
-		// `namespace foo {...}`
-		if (ts.isModuleDeclaration(node) && node.flags & 16) {
-			node.body?.statements?.forEach(scan);
-			return;
-		}
-
 		// EOF
 		if (node.kind === 1) return;
 
@@ -290,7 +284,8 @@ export function walk(node, callback) {
  *   import('typescript').TypeAliasDeclaration |
  *   import('typescript').ClassDeclaration |
  *   import('typescript').FunctionDeclaration |
- *   import('typescript').VariableStatement
+ *   import('typescript').VariableStatement |
+ *   import('typescript').ModuleDeclaration
  * }
  */
 export function is_declaration(node) {
@@ -299,7 +294,8 @@ export function is_declaration(node) {
 		ts.isTypeAliasDeclaration(node) ||
 		ts.isClassDeclaration(node) ||
 		ts.isFunctionDeclaration(node) ||
-		ts.isVariableStatement(node)
+		ts.isVariableStatement(node) ||
+		!!(ts.isModuleDeclaration(node) && node.flags & 16)
 	);
 }
 

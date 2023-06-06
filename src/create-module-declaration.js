@@ -39,6 +39,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/** @type {Map<string, Map<string, import('./types').Declaration>>} */
 	const traced = new Map();
 
+	/** @type {Set<string>} */
+	const exports = new Set();
+
 	/**
 	 * @param {string} module
 	 * @param {string} name
@@ -108,9 +111,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 			traced.set(file, new Map());
 		}
 	}
-
-	/** @type {Set<string>} */
-	const exports = new Set();
 
 	/**
 	 * @param {string} id
@@ -193,7 +193,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 	// treeshaking
 	for (const name of exports) {
-		reference(entry, name);
+		const declaration = trace_export(entry, name);
+		if (declaration) reference(declaration.module, declaration.name);
 	}
 
 	/** @type {Set<string>} */
@@ -246,7 +247,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/**
 	 * @param {string} id
 	 * @param {string} name
-	 * @returns {import('./types').Declaration}
+	 * @returns {import('./types').Declaration | null}
 	 */
 	function trace_export(id, name) {
 		const module = bundle.get(id);
@@ -254,6 +255,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 			const local = module.exports.get(name);
 			if (local) {
 				return trace(id, local);
+			}
+
+			const binding = module.export_from.get(name);
+			if (binding) {
+				return trace_export(binding.id, binding.name);
 			}
 
 			for (const reference of module.export_all) {
@@ -269,7 +275,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			if (declaration) return declaration;
 		}
 
-		throw new Error(`Could not find exported name '${name}' in '${id}'`);
+		return null;
 	}
 
 	/**
@@ -299,7 +305,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			const binding = module.imports.get(name) ?? module.export_from.get(name);
 			if (binding) {
-				return trace_export(binding.id, binding.name);
+				const declaration = trace_export(binding.id, binding.name);
+				if (declaration) return declaration;
 			}
 
 			for (const reference of module.export_all) {

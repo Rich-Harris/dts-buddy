@@ -1,5 +1,10 @@
 # dts-buddy changelog
 
+## 0.1.0
+
+- Treeshaking
+- Robust renaming
+
 ## 0.0.10
 
 - Ignore `outDir` setting

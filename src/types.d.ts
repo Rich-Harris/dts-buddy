@@ -2,7 +2,7 @@ import { SourceMapMappings } from '@jridgewell/sourcemap-codec';
 
 interface Declaration {
 	module: string;
-	external: boolean;
+	external: boolean; // TODO do we need this?
 	name: string;
 	alias: string;
 	included: boolean;
@@ -11,6 +11,7 @@ interface Declaration {
 
 interface Binding {
 	id: string;
+	external: boolean;
 	name: string;
 }
 

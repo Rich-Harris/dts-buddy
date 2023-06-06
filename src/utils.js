@@ -112,6 +112,7 @@ export function get_dts(file, created, resolve) {
 							const name = node.importClause.name.getText(module.ast);
 							module.imports.set(name, {
 								id,
+								external,
 								name: 'default'
 							});
 						} else if (node.importClause.namedBindings) {
@@ -120,6 +121,7 @@ export function get_dts(file, created, resolve) {
 								const name = node.importClause.namedBindings.name.getText(module.ast);
 								module.import_all.set(name, {
 									id,
+									external,
 									name
 								});
 							}
@@ -131,6 +133,7 @@ export function get_dts(file, created, resolve) {
 
 									module.imports.set(local, {
 										id,
+										external,
 										name: specifier.propertyName?.getText(module.ast) ?? local
 									});
 								});
@@ -154,6 +157,7 @@ export function get_dts(file, created, resolve) {
 
 								module.export_from.set(name, {
 									id,
+									external,
 									name: local
 								});
 							});

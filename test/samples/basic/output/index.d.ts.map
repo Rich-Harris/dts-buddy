@@ -3,7 +3,6 @@
 	"file": "index.d.ts",
 	"names": [
 		"Vector2",
-		"Vector3",
 		"add",
 		"multiply"
 	],
@@ -17,5 +16,5 @@
 		null,
 		null
 	],
-	"mappings": ";;kBACiBA,OAAOA;;;;;;;;WAQPC,OAAOA;;;;;;;iBCHRC,GAAGA;;;;;;;iBCAHC,QAAQA"
+	"mappings": ";;kBACiBA,OAAOA;;;;;;;;;iBCKRC,GAAGA;;;;;;;iBCAHC,QAAQA"
 }

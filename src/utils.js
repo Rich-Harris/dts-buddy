@@ -112,12 +112,7 @@ export function get_dts(file, created, resolve) {
 							const name = node.importClause.name.getText(module.ast);
 							module.imports.set(name, {
 								id,
-								external,
-								declaration: {
-									name: 'default',
-									alias: '',
-									included: false
-								}
+								name: 'default'
 							});
 						} else if (node.importClause.namedBindings) {
 							// `import * as foo`
@@ -125,12 +120,7 @@ export function get_dts(file, created, resolve) {
 								const name = node.importClause.namedBindings.name.getText(module.ast);
 								module.import_all.set(name, {
 									id,
-									external,
-									declaration: {
-										name,
-										alias: '',
-										included: false
-									}
+									name
 								});
 							}
 
@@ -141,12 +131,7 @@ export function get_dts(file, created, resolve) {
 
 									module.imports.set(local, {
 										id,
-										external,
-										declaration: {
-											name: specifier.propertyName?.getText(module.ast) ?? local,
-											alias: '',
-											included: false
-										}
+										name: specifier.propertyName?.getText(module.ast) ?? local
 									});
 								});
 							}
@@ -169,12 +154,7 @@ export function get_dts(file, created, resolve) {
 
 								module.export_from.set(name, {
 									id,
-									external,
-									declaration: {
-										name: local,
-										alias: '',
-										included: false
-									}
+									name: local
 								});
 							});
 						}
@@ -222,9 +202,12 @@ export function get_dts(file, created, resolve) {
 
 			/** @type {import('./types').Declaration} */
 			const declaration = {
+				module: file,
+				external: false,
 				name,
 				alias: '',
-				included: false
+				included: false,
+				references: new Set()
 			};
 
 			module.declarations.set(name, declaration);
@@ -248,8 +231,12 @@ export function get_dts(file, created, resolve) {
 					if (resolved) module.dependencies.push(resolved);
 				}
 
-				// TODO track which things are referenced inside this declaration,
-				// so that we can treeshake unused stuff
+				if (is_reference(node)) {
+					const name = node.getText(module.ast);
+					if (name !== declaration.name) {
+						declaration.references.add(name);
+					}
+				}
 			});
 
 			return;

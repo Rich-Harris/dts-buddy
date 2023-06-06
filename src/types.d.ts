@@ -1,15 +1,17 @@
 import { SourceMapMappings } from '@jridgewell/sourcemap-codec';
 
 interface Declaration {
+	module: string;
+	external: boolean;
 	name: string;
 	alias: string;
 	included: boolean;
+	references: Set<string>;
 }
 
 interface Binding {
 	id: string;
-	external: boolean;
-	declaration: Declaration;
+	name: string;
 }
 
 interface ModuleReference {

@@ -21,16 +21,22 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/** @type {string[]} */
 	const ambient = [];
 
-	/** @type {Record<string, Record<string, string>>} */
-	const imports = {};
+	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	const external_imports = {};
 
-	/** @type {Record<string, Record<string, string>>} */
-	const import_alls = {};
+	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	const external_import_alls = {};
+
+	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	const external_export_from = {};
+
+	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	const external_export_all_from = {};
 
 	/** @type {Map<string, import('./types').Module>} */
 	const bundle = new Map();
 
-	/** @type {Map<string, Map<string, string>>} */
+	/** @type {Map<string, Map<string, import('./types').Declaration>>} */
 	const traced = new Map();
 
 	// first pass — discover which modules are included in the bundle
@@ -50,21 +56,20 @@ export function create_module_declaration(id, entry, created, resolve) {
 				}
 			}
 
-			for (const binding of module.imports.values()) {
-				(imports[binding.id] ??= {})[binding.declaration.name] = '';
-			}
+			// for (const binding of module.imports.values()) {
+			// 	(external_imports[binding.id] ??= {})[binding.name] = '';
+			// }
 
-			for (const binding of module.import_all.values()) {
-				(import_alls[binding.id] ??= {})[binding.declaration.name] = '';
-			}
+			// for (const binding of module.import_all.values()) {
+			// 	(external_import_alls[binding.id] ??= {})[binding.name] = '';
+			// }
 
 			bundle.set(file, module);
 			traced.set(file, new Map());
 		}
 	}
 
-	// TODO treeshaking
-
+	/** @type {Set<string>} */
 	const exports = new Set();
 
 	/**
@@ -87,7 +92,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 				const binding = module.imports.get(local);
 				if (binding) {
-					assign_alias(binding.id, binding.declaration.name, alias);
+					assign_alias(binding.id, binding.name, alias);
 					return true;
 				}
 
@@ -96,7 +101,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			const binding = module.export_from.get(name);
 			if (binding) {
-				assign_alias(binding.id, binding.declaration.name, alias);
+				assign_alias(binding.id, binding.name, alias);
 				return true;
 			}
 
@@ -131,6 +136,26 @@ export function create_module_declaration(id, entry, created, resolve) {
 		}
 	}
 
+	/**
+	 * @param {string} id
+	 * @param {string} name
+	 */
+	function reference(id, name) {
+		const declaration = trace(id, name);
+		if (!declaration.included) {
+			declaration.included = true;
+
+			for (const name of declaration.references) {
+				reference(declaration.module, name);
+			}
+		}
+	}
+
+	// treeshaking
+	for (const name of exports) {
+		reference(entry, name);
+	}
+
 	/** @type {Set<string>} */
 	const names = new Set();
 
@@ -150,18 +175,18 @@ export function create_module_declaration(id, entry, created, resolve) {
 		assign_alias(entry, name, get_name(name));
 	}
 
-	// ...and imported bindings...
-	for (const id in imports) {
-		for (const name in imports[id]) {
-			imports[id][name] = get_name(name);
-		}
-	}
+	// // ...and imported bindings...
+	// for (const id in external_imports) {
+	// 	for (const name in external_imports[id]) {
+	// 		external_imports[id][name] = get_name(name);
+	// 	}
+	// }
 
-	for (const id in import_alls) {
-		for (const name in import_alls[id]) {
-			import_alls[id][name] = get_name(name);
-		}
-	}
+	// for (const id in external_import_alls) {
+	// 	for (const name in external_import_alls[id]) {
+	// 		external_import_alls[id][name] = get_name(name);
+	// 	}
+	// }
 
 	// ...then deconflict everything else
 	for (const module of bundle.values()) {
@@ -175,37 +200,52 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/**
 	 * @param {string} id
 	 * @param {string} name
-	 * @returns {string} TODO or an external import
+	 * @returns {import('./types').Declaration}
 	 */
 	function trace(id, name) {
 		const cache = traced.get(id);
 
 		if (!cache) {
 			// this means we're dealing with an external module
-			return imports[id][name] ?? import_alls[id][name];
+			return external_imports[id][name] ?? external_import_alls[id][name];
 		}
 
 		if (cache.has(name)) {
-			return /** @type {string} */ (cache.get(name));
+			return /** @type {import('./types').Declaration} */ (cache.get(name));
 		}
 
 		const module = bundle.get(id);
 		if (module) {
 			const declaration = module.declarations.get(name);
 			if (declaration) {
-				cache.set(name, declaration.alias);
-				return declaration.alias;
+				cache.set(name, declaration);
+				return declaration;
 			}
 
 			const binding = module.imports.get(name) ?? module.export_from.get(name);
 			if (binding) {
-				const alias = trace(binding.id, binding.declaration.name);
-				cache.set(name, alias);
-				return alias;
+				const declaration = trace(binding.id, binding.name);
+				cache.set(name, declaration);
+				return declaration;
+			}
+
+			for (const reference of module.export_all) {
+				const declaration = trace(reference.id, name);
+				if (declaration) {
+					cache.set(name, declaration);
+					return declaration;
+				}
 			}
 
 			// otherwise it's presumably a built-in
-			return name;
+			return {
+				module: '<builtin>',
+				external: false,
+				included: true,
+				name,
+				alias: name,
+				references: new Set()
+			};
 		} else {
 			throw new Error('TODO external imports');
 		}
@@ -214,19 +254,19 @@ export function create_module_declaration(id, entry, created, resolve) {
 	let content = `declare module '${id}' {`;
 
 	// inject imports from external modules
-	for (const id in imports) {
-		const specifiers = Object.keys(imports[id]).map((name) => {
-			const alias = imports[id][name];
-			return name === alias ? name : `${name} as ${alias}`;
+	for (const id in external_imports) {
+		const specifiers = Object.keys(external_imports[id]).map((name) => {
+			const declaration = external_imports[id][name];
+			return name === declaration.alias ? name : `${name} as ${declaration.alias}`;
 		});
 
-		for (const name in imports[id]) {
+		for (const name in external_imports[id]) {
 			content += `\n\timport type { ${specifiers.join(', ')} } from '${id}';`;
 		}
 	}
 
-	for (const id in import_alls) {
-		for (const name in import_alls[id]) {
+	for (const id in external_import_alls) {
+		for (const name in external_import_alls[id]) {
 			content += `\n\timport * as ${name} from '${id}';`; // TODO could this have been aliased?
 		}
 	}
@@ -257,6 +297,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 				const declaration = /** @type {import('./types').Declaration} */ (
 					module.declarations.get(name)
 				);
+
+				if (!declaration.included) {
+					result.remove(node.pos, node.end);
+					return;
+				}
 
 				if (identifier && declaration.alias !== declaration.name) {
 					result.overwrite(identifier.getStart(module.ast), identifier.end, declaration.alias);
@@ -351,9 +396,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 						const name = node.getText(module.ast);
 						if (params.has(name)) return;
 
-						const alias = trace(module.file, name);
+						const declaration = trace(module.file, name);
 
-						if (alias !== name) {
+						if (declaration.alias !== name) {
 							result.overwrite(node.getStart(module.ast), node.getEnd(), name);
 						}
 					}

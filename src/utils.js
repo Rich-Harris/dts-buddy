@@ -3,7 +3,6 @@ import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 import globrex from 'globrex';
 import ts from 'typescript';
-import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { decode } from '@jridgewell/sourcemap-codec';
 

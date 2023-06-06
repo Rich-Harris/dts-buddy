@@ -6,12 +6,6 @@ declare module 'my-lib' {
 		/** The y component */
 		y: number;
 	}
-
-	/** A vector with three components */
-	interface Vector3 extends Vector2 {
-		/** The z component */
-		z: number;
-	}
 	/**
 	 * Add two vectors
 	 * */

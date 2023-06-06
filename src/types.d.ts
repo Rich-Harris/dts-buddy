@@ -1,26 +1,46 @@
 import { SourceMapMappings } from '@jridgewell/sourcemap-codec';
 
-export interface GeneratedModule {
-	type: 'generated',
-	dts: string;
-	ast: import('typescript').SourceFile;
-	source: string;
-	map: any; // TODO
-	mappings: SourceMapMappings;
-	locator: (pos: number) => import('locate-character').Location;
+interface Declaration {
+	module: string;
+	name: string;
+	alias: string;
+	external: boolean;
+	included: boolean;
+	references: Set<string>;
 }
 
-export interface AuthoredModule {
-	type: 'authored',
-	dts: string;
-	ast: import('typescript').SourceFile;
-	source: null;
-	map: null;
-	mappings: null;
-	locator: (pos: number) => import('locate-character').Location;
+interface Binding {
+	id: string;
+	external: boolean;
+	name: string;
 }
 
-export type Module = GeneratedModule | AuthoredModule;
+interface ModuleReference {
+	id: string;
+	external: boolean;
+}
+
+export interface Module {
+	file: string;
+	dts: string;
+	ast: import('typescript').SourceFile;
+	locator: (pos: number) => import('locate-character').Location;
+	source: null | {
+		code: string;
+		map: any; // TODO
+		mappings: SourceMapMappings;
+	};
+	dependencies: string[];
+	declarations: Map<string, Declaration>;
+	imports: Map<string, Binding>;
+	import_all: Map<string, Binding>;
+	export_from: Map<string, Binding>;
+	export_all: ModuleReference[];
+	ambient_imports: ModuleReference[];
+
+	/** A map of <exported, local> exports */
+	exports: Map<string, string>;
+}
 
 export interface Mapping {
 	source: string;

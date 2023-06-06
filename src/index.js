@@ -4,14 +4,23 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import { decode } from '@jridgewell/sourcemap-codec';
-import { get_input_files, write } from './utils.js';
+import {
+	get_dts,
+	get_input_files,
+	is_declaration,
+	is_reference,
+	resolve_dts,
+	walk,
+	write
+} from './utils.js';
+import { create_module_declaration } from './create-module-declaration.js';
 
 /**
  * @param {{
  *   output: string;
  *   modules: Record<string, string>;
  *   project?: string;
+ *   compilerOptions?: ts.CompilerOptions;
  *   include?: string[];
  *   exclude?: string[];
  *   debug?: string;
@@ -45,6 +54,7 @@ export async function createBundle(options) {
 		/** @type {ts.CompilerOptions} */
 		const compilerOptions = {
 			...tsconfig.compilerOptions,
+			...options.compilerOptions,
 			allowJs: true,
 			checkJs: true,
 			declaration: true,
@@ -82,57 +92,6 @@ export async function createBundle(options) {
 
 		let types = '';
 
-		/**
-		 * @type {Map<string, import('./types').Module>}
-		 */
-		const cache = new Map();
-
-		/**
-		 * @param {string} file
-		 * @returns {import('./types').Module}
-		 */
-		function get_dts(file) {
-			const authored = !(file in created);
-			const map_file = authored ? null : file + '.map';
-
-			if (!cache.has(file)) {
-				const dts = created[file] ?? fs.readFileSync(file, 'utf8');
-				const map = map_file && JSON.parse(created[map_file]);
-
-				const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
-
-				const source_file = map && path.resolve(path.dirname(file), map.sources[0]);
-				const source = source_file && fs.readFileSync(source_file, 'utf8');
-
-				/** @type {import('./types').Module} */
-				const module = {
-					type: authored ? 'authored' : 'generated',
-					dts,
-					source,
-					ast,
-					map,
-					mappings: map ? decode(map.mappings) : null,
-					locator: getLocator(dts, { offsetLine: 1 })
-				};
-
-				cache.set(file, module);
-			}
-
-			return /** @type {import('./types').Module} */ (cache.get(file));
-		}
-
-		/**
-		 * @param {string} from
-		 * @param {string} to
-		 */
-		function resolve_dts(from, to) {
-			const file = path.resolve(from, to);
-			if (file.endsWith('.d.ts')) return file;
-			if (file.endsWith('.ts')) return file.replace(/\.ts$/, '.d.ts');
-			if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
-			return file + '.d.ts';
-		}
-
 		/** @type {Map<string, string[]>} **/
 		const all_exports = new Map();
 
@@ -144,246 +103,56 @@ export async function createBundle(options) {
 
 		let first = true;
 
+		/**
+		 * @param {string} file
+		 * @param {string} specifier
+		 * @returns {string | null}
+		 */
+		function resolve(file, specifier) {
+			// if a module imports from another module we're declaring,
+			// leave the import intact
+			if (specifier in modules) {
+				return null;
+			}
+
+			// resolve relative imports and aliases (from tsconfig.paths)
+			return specifier.startsWith('.')
+				? resolve_dts(path.dirname(file), specifier)
+				: compilerOptions.paths && specifier in compilerOptions.paths
+				? resolve_dts(cwd, compilerOptions.paths[specifier][0])
+				: null;
+		}
+
 		for (const id in modules) {
 			if (!first) types += '\n\n';
 			first = false;
 
-			types += `declare module '${id}' {`;
+			const { content, mappings, ambient } = create_module_declaration(
+				id,
+				modules[id],
+				created,
+				resolve
+			);
 
-			/** @type {Map<string, import('./types').Mapping>} */
-			const mappings = new Map();
+			types += content;
 			all_mappings.set(id, mappings);
-
-			const included = new Set([modules[id]]);
-
-			/**
-			 * A map of module IDs to the names of the things they export
-			 * @type {Map<string, string[]>}
-			 */
-			const module_exports = new Map();
-
-			const modules_to_export_all_from = new Set([modules[id]]);
-
-			for (const file of included) {
-				const module = get_dts(file);
-
-				/** @type {string[]} */
-				const exported = [];
-
-				module_exports.set(file, exported);
-
-				const magic_string = new MagicString(module.dts);
-
-				const index = module.dts.indexOf('//# sourceMappingURL=');
-				if (index !== -1) magic_string.remove(index, module.dts.length);
-
-				ts.forEachChild(module.ast, (node) => {
-					// follow imports
-					if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-						if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-							const { text } = node.moduleSpecifier;
-
-							// if a module imports from the module we're currently declaring,
-							// just remove the import altogether
-							if (text === id) {
-								magic_string.remove(node.pos, node.end);
-							}
-
-							// if a module imports from another module we're declaring,
-							// leave the import intact
-							if (text in modules) {
-								return;
-							}
-
-							// resolve relative imports and aliases (from tsconfig.paths)
-							const resolved = text.startsWith('.')
-								? resolve_dts(path.dirname(file), text)
-								: compilerOptions.paths && text in compilerOptions.paths
-								? resolve_dts(cwd, compilerOptions.paths[text][0])
-								: null;
-
-							if (resolved) {
-								if (ts.isImportDeclaration(node) && !node.importClause) {
-									// assume this is an ambient module
-									ambient_modules.add(resolved);
-								} else {
-									included.add(resolved);
-								}
-
-								if (ts.isExportDeclaration(node)) {
-									if (node.exportClause) {
-										// export { x } from '...';
-										node.exportClause.forEachChild((specifier) => {
-											if (ts.isExportSpecifier(specifier)) {
-												if (specifier.propertyName) {
-													throw new Error(`export { x as y } is not yet implemented`);
-												}
-
-												const name = specifier.getText(module.ast);
-												exported.push(name);
-											}
-										});
-									} else {
-										// export * from '...';
-										modules_to_export_all_from.add(resolved);
-									}
-								}
-
-								magic_string.remove(node.pos, node.end);
-							}
-						}
-
-						return;
-					}
-
-					if (
-						ts.isInterfaceDeclaration(node) ||
-						ts.isTypeAliasDeclaration(node) ||
-						ts.isClassDeclaration(node) ||
-						ts.isFunctionDeclaration(node) ||
-						ts.isVariableStatement(node)
-					) {
-						const export_modifier = node.modifiers?.find((node) => node.kind === 93);
-						if (export_modifier) {
-							const identifier = ts.isVariableStatement(node)
-								? ts.getNameOfDeclaration(node.declarationList.declarations[0])
-								: ts.getNameOfDeclaration(node);
-
-							if (identifier) {
-								const name = identifier.getText(module.ast);
-								exported.push(name);
-
-								const pos = identifier.getStart(module.ast);
-								const loc = module.locator(pos);
-
-								if (module.mappings) {
-									// the sourcemaps generated by TypeScript are very inaccurate, borderline useless.
-									// we need to fix them up here. TODO is it only inaccurate in the JSDoc case?
-									const segments = module.mappings?.[loc.line - 1];
-
-									// find the segments immediately before and after the generated column
-									const index = segments.findIndex((segment) => segment[0] >= loc.column);
-									const a = segments[index - 1] ?? segments[0];
-									let l = /** @type {number} */ (a[2]);
-
-									const source_line = module.source.split('\n')[l];
-									const regex = new RegExp(`\\b${name}\\b`);
-									const match = regex.exec(source_line);
-
-									if (match) {
-										const mapping = {
-											source: path.resolve(path.dirname(file), module.map.sources[0]),
-											line: l + 1,
-											column: match.index
-										};
-
-										mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
-									} else {
-										// TODO figure out how to repair sourcemaps in this case
-									}
-								} else {
-									const mapping = {
-										source: file,
-										line: loc.line,
-										column: loc.column
-									};
-
-									mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
-								}
-							}
-
-							// remove all export keywords in the initial pass; reinstate as necessary later
-							let b = export_modifier.end;
-							const a = b - 6;
-							while (/\s/.test(module.dts[b])) b += 1;
-
-							magic_string.remove(a, b);
-						}
-
-						const declare_modifier = node.modifiers?.find((node) => node.kind === 136);
-						if (declare_modifier) {
-							// i'm not sure why typescript turns `export function` in a .ts file to `export declare function`,
-							// but it's weird and we don't want it
-							let b = declare_modifier.end;
-							const a = b - 7;
-							while (/\s/.test(module.dts[b])) b += 1;
-
-							magic_string.remove(a, b);
-						}
-
-						walk(node, (node) => {
-							// `import('./foo').Foo` -> `Foo`
-							if (
-								ts.isImportTypeNode(node) &&
-								ts.isLiteralTypeNode(node.argument) &&
-								ts.isStringLiteral(node.argument.literal) &&
-								node.argument.literal.text.startsWith('.')
-							) {
-								// follow import
-								const resolved = resolve_dts(path.dirname(file), node.argument.literal.text);
-
-								included.add(resolved);
-
-								// remove the `import(...)`
-								if (node.qualifier) {
-									let a = node.pos;
-									while (/\s/.test(module.dts[a])) a += 1;
-									magic_string.remove(a, node.qualifier.pos);
-								} else {
-									throw new Error('TODO');
-								}
-							}
-
-							// @ts-expect-error
-							if (node.jsDoc) {
-								// @ts-expect-error
-								for (const jsDoc of node.jsDoc) {
-									if (jsDoc.comment) {
-										// @ts-expect-error
-										jsDoc.tags?.forEach((tag) => {
-											const kind = tag.tagName.escapedText;
-											if (kind === 'example' || kind === 'default') return; // TODO others?
-											magic_string.remove(tag.pos, tag.end);
-										});
-									} else {
-										magic_string.remove(jsDoc.pos, jsDoc.end);
-									}
-								}
-							}
-						});
-					}
-				});
-
-				const mod = magic_string
-					.trim()
-					.indent()
-					.toString()
-					.replace(/^(    )+/gm, (match) => '\t'.repeat(match.length / 4));
-				if (mod) types += '\n' + mod;
+			for (const id of ambient) {
+				ambient_modules.add(id);
 			}
-
-			/** @type {string[]} */
-			const exported = [];
-			all_exports.set(id, exported);
-
-			for (const id of modules_to_export_all_from) {
-				for (const name of /** @type {string[]} */ (module_exports.get(id))) {
-					exported.push(name);
-				}
-			}
-
-			types += `\n}`;
 		}
 
 		for (const file of ambient_modules) {
-			const module = get_dts(file);
+			// clean up ambient module then inject wholesale
+			// TODO do we need sourcemaps here?
+			const dts = created[file] ?? fs.readFileSync(file, 'utf8');
+			const result = new MagicString(dts);
 
-			const magic_string = new MagicString(module.dts);
+			const index = dts.indexOf('//# sourceMappingURL=');
+			if (index !== -1) result.remove(index, dts.length);
 
-			const index = module.dts.indexOf('//# sourceMappingURL=');
-			if (index !== -1) magic_string.remove(index, module.dts.length);
+			const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
 
-			ts.forEachChild(module.ast, (node) => {
+			ts.forEachChild(ast, (node) => {
 				if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
 					walk(node, (node) => {
 						// @ts-expect-error
@@ -393,10 +162,10 @@ export async function createBundle(options) {
 								if (jsDoc.comment) {
 									// @ts-expect-error
 									jsDoc.tags?.forEach((tag) => {
-										magic_string.remove(tag.pos, tag.end);
+										result.remove(tag.pos, tag.end);
 									});
 								} else {
-									magic_string.remove(jsDoc.pos, jsDoc.end);
+									result.remove(jsDoc.pos, jsDoc.end);
 								}
 							}
 						}
@@ -404,7 +173,7 @@ export async function createBundle(options) {
 				}
 			});
 
-			types += magic_string.trim().toString();
+			types += result.trim().toString();
 		}
 
 		// finally, add back exports as appropriate
@@ -422,36 +191,22 @@ export async function createBundle(options) {
 
 				const name = node.name.text;
 
-				const exported = all_exports.get(name);
-				if (!exported) return;
-
 				const mappings = all_mappings.get(name);
 
 				node.body.forEachChild((node) => {
-					if (
-						ts.isInterfaceDeclaration(node) ||
-						ts.isTypeAliasDeclaration(node) ||
-						ts.isClassDeclaration(node) ||
-						ts.isFunctionDeclaration(node) ||
-						ts.isVariableStatement(node)
-					) {
+					if (is_declaration(node)) {
 						const identifier = ts.isVariableStatement(node)
 							? ts.getNameOfDeclaration(node.declarationList.declarations[0])
 							: ts.getNameOfDeclaration(node);
 
 						if (identifier) {
 							const name = identifier.getText(ast);
-							if (exported.includes(name)) {
-								const start = node.getStart(ast);
-								magic_string.prependRight(start, 'export ');
-							}
 
 							const mapping = mappings?.get(name);
 
 							if (mapping) {
 								const start = identifier.getStart(ast);
 								let { line, column } = locator(start);
-								if (exported.includes(name)) column += 7;
 
 								const relative = path.relative(path.dirname(output), mapping.source);
 
@@ -493,13 +248,4 @@ export async function createBundle(options) {
 	} finally {
 		process.chdir(original_cwd);
 	}
-}
-
-/**
- * @param {import('typescript').Node} node
- * @param {(node: import('typescript').Node) => void} callback
- */
-function walk(node, callback) {
-	callback(node);
-	ts.forEachChild(node, (child) => walk(child, callback));
 }

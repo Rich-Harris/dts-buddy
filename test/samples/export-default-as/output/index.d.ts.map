@@ -1,0 +1,14 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"add"
+	],
+	"sources": [
+		"../input/index.js"
+	],
+	"sourcesContent": [
+		null
+	],
+	"mappings": ";;;;iBAMwBA,GAAGA"
+}

@@ -8,12 +8,6 @@
 		"emitDeclarationOnly": true,
 		"module": "esnext",
 		"target": "esnext",
-		"moduleResolution": "bundler",
-		"paths":{
-			"my-lib":["./input/types.d.ts"]
-		}
-	},
-	"include": [
-		"input"
-	]
+		"moduleResolution": "bundler"
+	}
 }

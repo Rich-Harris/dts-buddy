@@ -274,6 +274,18 @@ export function create_module_declaration(id, entry, created, resolve) {
 			}
 		}
 
+		for (const id in external_export_from) {
+			const specifiers = Object.keys(external_export_from[id]).map((name) => {
+				// this is a bit of a hack, but it makes life easier
+				exports.delete(name);
+
+				const declaration = external_export_from[id][name];
+				return name === declaration.alias ? name : `${name} as ${declaration.alias}`;
+			});
+
+			content += `\n\texport { ${specifiers.join(', ')} } from '${id}';`;
+		}
+
 		// second pass — editing
 		for (const module of bundle.values()) {
 			const result = new MagicString(module.dts);
@@ -525,7 +537,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 		if (!cache) {
 			// this means we're dealing with an external module
-			return external_imports[id]?.[name] ?? external_import_alls[id]?.[name];
+			return (
+				external_imports[id]?.[name] ??
+				external_import_alls[id]?.[name] ??
+				external_export_from[id]?.[name]
+			);
 		}
 
 		if (cache.has(name)) {

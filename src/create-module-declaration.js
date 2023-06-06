@@ -47,7 +47,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 	function create_external_declaration(module, name) {
 		return {
 			module,
-			external: true,
 			name,
 			alias: '',
 			included: false,
@@ -314,7 +313,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 			// otherwise it's presumably a built-in
 			return {
 				module: '<builtin>',
-				external: false,
 				included: true,
 				name,
 				alias: name,

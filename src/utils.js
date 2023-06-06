@@ -207,7 +207,6 @@ export function get_dts(file, created, resolve) {
 			/** @type {import('./types').Declaration} */
 			const declaration = {
 				module: file,
-				external: false,
 				name,
 				alias: '',
 				included: false,

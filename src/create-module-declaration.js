@@ -228,21 +228,27 @@ export function create_module_declaration(id, entry, created, resolve) {
 		}
 
 		// ...and imported bindings...
-		for (const id in external_imports) {
-			for (const name in external_imports[id]) {
-				external_imports[id][name].alias ||= get_name(name);
+		for (const module in external_imports) {
+			if (module === id) continue;
+
+			for (const name in external_imports[module]) {
+				external_imports[module][name].alias ||= get_name(name);
 			}
 		}
 
-		for (const id in external_import_alls) {
-			for (const name in external_import_alls[id]) {
-				external_import_alls[id][name].alias ||= get_name(name);
+		for (const module in external_import_alls) {
+			if (module === id) continue;
+
+			for (const name in external_import_alls[module]) {
+				external_import_alls[module][name].alias ||= get_name(name);
 			}
 		}
 
-		for (const id in external_export_from) {
-			for (const name in external_export_from[id]) {
-				external_export_from[id][name].alias ||= get_name(name);
+		for (const module in external_export_from) {
+			if (module === id) continue;
+
+			for (const name in external_export_from[module]) {
+				external_export_from[module][name].alias ||= get_name(name);
 			}
 		}
 
@@ -500,16 +506,20 @@ export function create_module_declaration(id, entry, created, resolve) {
 	}
 
 	/**
-	 * @param {string} id
+	 * @param {string} module_id
 	 * @param {string} name
 	 * @returns {import('./types').Declaration | null}
 	 */
-	function trace_export(id, name) {
-		const module = bundle.get(id);
+	function trace_export(module_id, name) {
+		if (module_id === id) {
+			return trace_export(entry, name);
+		}
+
+		const module = bundle.get(module_id);
 		if (module) {
 			const local = module.exports.get(name);
 			if (local) {
-				return trace(id, local);
+				return trace(module_id, local);
 			}
 
 			const binding = module.export_from.get(name);
@@ -523,9 +533,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 			}
 		} else {
 			const declaration =
-				external_imports[id]?.[name] ??
-				external_import_alls[id]?.[name] ??
-				external_export_from[id]?.[name];
+				external_imports[module_id]?.[name] ??
+				external_import_alls[module_id]?.[name] ??
+				external_export_from[module_id]?.[name];
 
 			if (declaration) return declaration;
 		}

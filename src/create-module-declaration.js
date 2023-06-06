@@ -260,12 +260,18 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 		// inject imports from external modules
 		for (const id in external_imports) {
-			const specifiers = Object.keys(external_imports[id]).map((name) => {
-				const declaration = external_imports[id][name];
-				return name === declaration.alias ? name : `${name} as ${declaration.alias}`;
-			});
+			const specifiers = [];
 
-			content += `\n\timport type { ${specifiers.join(', ')} } from '${id}';`;
+			for (const name in external_imports[id]) {
+				const declaration = external_imports[id][name];
+				if (declaration.included) {
+					specifiers.push(name === declaration.alias ? name : `${name} as ${declaration.alias}`);
+				}
+			}
+
+			if (specifiers.length > 0) {
+				content += `\n\timport type { ${specifiers.join(', ')} } from '${id}';`;
+			}
 		}
 
 		for (const id in external_import_alls) {

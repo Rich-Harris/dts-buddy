@@ -52,6 +52,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			module,
 			name,
 			alias: '',
+			external: true,
 			included: false,
 			references: new Set()
 		};
@@ -77,7 +78,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			for (const binding of module.imports.values()) {
 				if (binding.external) {
 					(external_imports[binding.id] ??= {})[binding.name] = create_external_declaration(
-						file,
+						binding.id,
 						binding.name
 					);
 				}
@@ -86,7 +87,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			for (const binding of module.import_all.values()) {
 				if (binding.external) {
 					(external_import_alls[binding.id] ??= {})[binding.name] = create_external_declaration(
-						file,
+						binding.id,
 						binding.name
 					);
 				}
@@ -95,7 +96,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			for (const binding of module.export_from.values()) {
 				if (binding.external) {
 					(external_export_from[binding.id] ??= {})[binding.name] = create_external_declaration(
-						file,
+						binding.id,
 						binding.name
 					);
 				}
@@ -151,8 +152,12 @@ export function create_module_declaration(id, entry, created, resolve) {
 				}
 			}
 		} else {
-			// this is an import from an external module
-			throw new Error('TODO imports from external modules');
+			const declaration =
+				external_imports[id]?.[name] ??
+				external_import_alls[id]?.[name] ??
+				external_export_from[id]?.[name];
+
+			declaration.alias = alias;
 		}
 	}
 
@@ -219,28 +224,26 @@ export function create_module_declaration(id, entry, created, resolve) {
 	// ...and imported bindings...
 	for (const id in external_imports) {
 		for (const name in external_imports[id]) {
-			external_imports[id][name].alias = get_name(name);
+			external_imports[id][name].alias ||= get_name(name);
 		}
 	}
 
 	for (const id in external_import_alls) {
 		for (const name in external_import_alls[id]) {
-			external_import_alls[id][name].alias = get_name(name);
+			external_import_alls[id][name].alias ||= get_name(name);
 		}
 	}
 
 	for (const id in external_export_from) {
 		for (const name in external_export_from[id]) {
-			external_export_from[id][name].alias = get_name(name);
+			external_export_from[id][name].alias ||= get_name(name);
 		}
 	}
 
 	// ...then deconflict everything else
 	for (const module of bundle.values()) {
 		for (const declaration of module.declarations.values()) {
-			if (!declaration.alias) {
-				declaration.alias = get_name(declaration.name);
-			}
+			declaration.alias ||= get_name(declaration.name);
 		}
 	}
 
@@ -288,7 +291,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 		if (!cache) {
 			// this means we're dealing with an external module
-			return external_imports[id][name] ?? external_import_alls[id][name];
+			return external_imports[id]?.[name] ?? external_import_alls[id]?.[name];
 		}
 
 		if (cache.has(name)) {
@@ -320,6 +323,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			// otherwise it's presumably a built-in
 			return {
 				module: '<builtin>',
+				external: false,
 				included: true,
 				name,
 				alias: name,
@@ -529,6 +533,27 @@ export function create_module_declaration(id, entry, created, resolve) {
 			.replace(/^(    )+/gm, (match) => '\t'.repeat(match.length / 4));
 
 		if (mod) content += '\n' + mod;
+	}
+
+	// finally, export any bindings that are exported from external modules
+
+	/** @type {string[]} */
+	const specifiers = [];
+
+	for (const name of exports) {
+		const declaration = trace_export(entry, name);
+		if (declaration?.external) {
+			const specifier =
+				declaration.alias === declaration.name
+					? declaration.name
+					: `${declaration.name} as ${declaration.alias}`;
+
+			specifiers.push(specifier);
+		}
+	}
+
+	if (specifiers.length > 0) {
+		content += `\n\texport { ${specifiers.join(', ')} };`;
 	}
 
 	content += `\n}`;

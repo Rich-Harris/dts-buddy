@@ -4,6 +4,7 @@ interface Declaration {
 	module: string;
 	name: string;
 	alias: string;
+	external: boolean;
 	included: boolean;
 	references: Set<string>;
 }

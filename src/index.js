@@ -142,31 +142,38 @@ export async function createBundle(options) {
 		}
 
 		for (const file of ambient_modules) {
-			// TODO clean up ambient module then inject wholesale
-			// const module = get_dts(file, created);
-			// const index = module.dts.indexOf('//# sourceMappingURL=');
-			// if (index !== -1) module.result.remove(index, module.dts.length);
-			// ts.forEachChild(module.ast, (node) => {
-			// 	if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
-			// 		walk(node, (node) => {
-			// 			// @ts-expect-error
-			// 			if (node.jsDoc) {
-			// 				// @ts-expect-error
-			// 				for (const jsDoc of node.jsDoc) {
-			// 					if (jsDoc.comment) {
-			// 						// @ts-expect-error
-			// 						jsDoc.tags?.forEach((tag) => {
-			// 							module.result.remove(tag.pos, tag.end);
-			// 						});
-			// 					} else {
-			// 						module.result.remove(jsDoc.pos, jsDoc.end);
-			// 					}
-			// 				}
-			// 			}
-			// 		});
-			// 	}
-			// });
-			// types += module.result.trim().toString();
+			// clean up ambient module then inject wholesale
+			// TODO do we need sourcemaps here?
+			const dts = created[file] ?? fs.readFileSync(file, 'utf8');
+			const result = new MagicString(dts);
+
+			const index = dts.indexOf('//# sourceMappingURL=');
+			if (index !== -1) result.remove(index, dts.length);
+
+			const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
+
+			ts.forEachChild(ast, (node) => {
+				if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+					walk(node, (node) => {
+						// @ts-expect-error
+						if (node.jsDoc) {
+							// @ts-expect-error
+							for (const jsDoc of node.jsDoc) {
+								if (jsDoc.comment) {
+									// @ts-expect-error
+									jsDoc.tags?.forEach((tag) => {
+										result.remove(tag.pos, tag.end);
+									});
+								} else {
+									result.remove(jsDoc.pos, jsDoc.end);
+								}
+							}
+						}
+					});
+				}
+			});
+
+			types += result.trim().toString();
 		}
 
 		// finally, add back exports as appropriate

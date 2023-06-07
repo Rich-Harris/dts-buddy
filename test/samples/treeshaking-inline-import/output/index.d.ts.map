@@ -1,0 +1,17 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"add",
+		"Vector2"
+	],
+	"sources": [
+		"../input/index.js",
+		"../input/types.d.ts"
+	],
+	"sourcesContent": [
+		null,
+		null
+	],
+	"mappings": ";;;;iBAMgBA,GAAGA;;WCLFC,OAAOA"
+}

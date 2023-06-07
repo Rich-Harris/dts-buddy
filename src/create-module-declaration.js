@@ -366,7 +366,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 									if (match) {
 										const mapping = {
-											source: path.resolve(path.dirname(module.file), module.source.map.sources[0]),
+											source: path.posix.resolve(
+												path.dirname(module.file),
+												module.source.map.sources[0]
+											),
 											line: l + 1,
 											column: match.index
 										};

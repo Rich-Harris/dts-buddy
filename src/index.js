@@ -202,7 +202,9 @@ export async function createBundle(options) {
 								const start = identifier.getStart(ast);
 								let { line, column } = locator(start);
 
-								const relative = path.posix.relative(path.dirname(output), mapping.source);
+								const relative = path
+									.relative(path.dirname(output), mapping.source)
+									.replace(/\\/g, '/');
 
 								smg.addMapping({
 									generated: { line, column },

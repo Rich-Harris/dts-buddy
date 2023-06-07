@@ -4,15 +4,7 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import {
-	get_dts,
-	get_input_files,
-	is_declaration,
-	is_reference,
-	resolve_dts,
-	walk,
-	write
-} from './utils.js';
+import { get_input_files, is_declaration, resolve_dts, walk, write } from './utils.js';
 import { create_module_declaration } from './create-module-declaration.js';
 
 /**
@@ -74,6 +66,8 @@ export async function createBundle(options) {
 
 		const program = ts.createProgram(input, compilerOptions, host);
 		program.emit();
+
+		console.log(Object.keys(created));
 
 		if (debug) {
 			for (const file in created) {

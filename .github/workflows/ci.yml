@@ -18,8 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16]
-        os: [ubuntu-latest]
+        include:
+          - node-version: [16]
+            os: [ubuntu-latest]
+          - node-version: 16
+            os: windows-latest
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3

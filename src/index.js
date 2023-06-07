@@ -27,7 +27,7 @@ export async function createBundle(options) {
 	/** @type {Record<string, string>} */
 	const modules = {};
 	for (const id in options.modules) {
-		modules[id] = path.posix.resolve(options.modules[id]).replace(/(\.d\.ts|\.js|\.ts)$/, '.d.ts');
+		modules[id] = path.resolve(options.modules[id]).replace(/(\.d\.ts|\.js|\.ts)$/, '.d.ts');
 	}
 
 	const cwd = path.resolve(path.dirname(project));
@@ -62,7 +62,7 @@ export async function createBundle(options) {
 		/** @type {Record<string, string>} */
 		const created = {};
 		const host = ts.createCompilerHost(compilerOptions);
-		host.writeFile = (file, contents) => (created[file] = contents);
+		host.writeFile = (file, contents) => (created[file.replace(/\//g, path.sep)] = contents);
 
 		const program = ts.createProgram(input, compilerOptions, host);
 		program.emit();

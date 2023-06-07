@@ -211,7 +211,7 @@ export function get_dts(file, created, resolve) {
 				alias: '',
 				included: false,
 				external: false,
-				references: []
+				dependencies: []
 			};
 
 			module.declarations.set(name, declaration);
@@ -236,7 +236,7 @@ export function get_dts(file, created, resolve) {
 						module.dependencies.push(resolved);
 
 						if (node.qualifier) {
-							declaration.references.push({
+							declaration.dependencies.push({
 								module: resolved ?? node.argument.literal.text,
 								name: node.qualifier.getText(module.ast)
 							});
@@ -247,7 +247,7 @@ export function get_dts(file, created, resolve) {
 				if (is_reference(node)) {
 					const name = node.getText(module.ast);
 					if (name !== declaration.name) {
-						declaration.references.push({
+						declaration.dependencies.push({
 							module: file,
 							name
 						});

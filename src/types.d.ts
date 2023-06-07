@@ -11,7 +11,7 @@ interface Declaration {
 	alias: string;
 	external: boolean;
 	included: boolean;
-	references: Reference[];
+	dependencies: Reference[];
 }
 
 interface Binding {

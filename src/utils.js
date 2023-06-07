@@ -210,7 +210,8 @@ export function get_dts(file, created, resolve) {
 				name,
 				alias: '',
 				included: false,
-				references: new Set()
+				external: false,
+				references: []
 			};
 
 			module.declarations.set(name, declaration);
@@ -232,12 +233,22 @@ export function get_dts(file, created, resolve) {
 					// follow import
 					const resolved = resolve(file, node.argument.literal.text);
 					if (resolved) module.dependencies.push(resolved);
+
+					if (node.qualifier) {
+						declaration.references.push({
+							module: resolved ?? node.argument.literal.text,
+							name: node.qualifier.getText(module.ast)
+						});
+					}
 				}
 
 				if (is_reference(node)) {
 					const name = node.getText(module.ast);
 					if (name !== declaration.name) {
-						declaration.references.add(name);
+						declaration.references.push({
+							module: file,
+							name
+						});
 					}
 				}
 			});

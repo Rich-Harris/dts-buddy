@@ -60,7 +60,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 				alias: '',
 				external: true,
 				included: false,
-				references: new Set()
+				references: []
 			};
 		};
 
@@ -146,8 +146,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 			if (!declaration.included) {
 				declaration.included = true;
 
-				for (const name of declaration.references) {
-					reference(declaration.module, name);
+				for (const { module, name } of declaration.references) {
+					reference(module, name);
 				}
 			}
 		};
@@ -593,7 +593,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 				included: true,
 				name,
 				alias: name,
-				references: new Set()
+				references: []
 			};
 		} else {
 			throw new Error('TODO external imports');

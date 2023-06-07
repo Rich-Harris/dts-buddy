@@ -232,13 +232,15 @@ export function get_dts(file, created, resolve) {
 				) {
 					// follow import
 					const resolved = resolve(file, node.argument.literal.text);
-					if (resolved) module.dependencies.push(resolved);
+					if (resolved) {
+						module.dependencies.push(resolved);
 
-					if (node.qualifier) {
-						declaration.references.push({
-							module: resolved ?? node.argument.literal.text,
-							name: node.qualifier.getText(module.ast)
-						});
+						if (node.qualifier) {
+							declaration.references.push({
+								module: resolved ?? node.argument.literal.text,
+								name: node.qualifier.getText(module.ast)
+							});
+						}
 					}
 				}
 

@@ -65,11 +65,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 		};
 
 		for (const file of included) {
-			console.log({ file });
 			const module = get_dts(file, created, resolve);
 
 			for (const dep of module.dependencies) {
-				console.log({ dep });
 				included.add(dep);
 			}
 

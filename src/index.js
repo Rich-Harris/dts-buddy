@@ -67,8 +67,6 @@ export async function createBundle(options) {
 		const program = ts.createProgram(input, compilerOptions, host);
 		program.emit();
 
-		console.log(Object.keys(created));
-
 		if (debug) {
 			for (const file in created) {
 				const relative = path.relative(cwd, file);

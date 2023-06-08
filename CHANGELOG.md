@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.2
+
+- Work on Windows
+
 ## 0.1.1
 
 - Ensure inline dependencies are correctly marked

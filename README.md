@@ -86,12 +86,7 @@ await createBundle({
 });
 ```
 
-## Known limitations
-
-This is a very rough-and-ready tool, that probably won't work for your use case (at least yet). In particular:
-
-- names are not deconflicted. if you have two things called `Foo` declared in separate modules, they might clobber each other depending on where they get used. oops!
-- sourcemaps aren't 100% reliable yet
+Note that the result will also be treeshaken — your .d.ts bundle will only include public types.
 
 ## License
 

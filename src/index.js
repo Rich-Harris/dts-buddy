@@ -4,7 +4,7 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import { get_input_files, is_declaration, resolve_dts, walk, write } from './utils.js';
+import { get_input_files, get_jsdoc, is_declaration, resolve_dts, walk, write } from './utils.js';
 import { create_module_declaration } from './create-module-declaration.js';
 
 /**
@@ -147,12 +147,10 @@ export async function createBundle(options) {
 			ts.forEachChild(ast, (node) => {
 				if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
 					walk(node, (node) => {
-						// @ts-expect-error
-						if (node.jsDoc) {
-							// @ts-expect-error
-							for (const jsDoc of node.jsDoc) {
+						const jsdoc = get_jsdoc(node);
+						if (jsdoc) {
+							for (const jsDoc of jsdoc) {
 								if (jsDoc.comment) {
-									// @ts-expect-error
 									jsDoc.tags?.forEach((tag) => {
 										result.remove(tag.pos, tag.end);
 									});

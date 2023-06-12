@@ -6,6 +6,12 @@ import ts from 'typescript';
 import { getLocator } from 'locate-character';
 import { decode } from '@jridgewell/sourcemap-codec';
 
+/** @param {ts.Node} node */
+export function get_jsdoc(node) {
+	const { jsDoc } = /** @type {{ jsDoc?: ts.JSDoc[] }} */ (/** @type {*} */ (node));
+	return jsDoc;
+}
+
 /**
  * @param {string} cwd
  * @param {string[]} [include]

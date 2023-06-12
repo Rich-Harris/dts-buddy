@@ -1,7 +1,7 @@
 import path from 'node:path';
 import ts from 'typescript';
 import MagicString from 'magic-string';
-import { get_dts, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
+import { get_dts, get_jsdoc, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
 
 /**
  * @param {string} id
@@ -452,15 +452,18 @@ export function create_module_declaration(id, entry, created, resolve) {
 							}
 						}
 
-						// @ts-expect-error
-						if (node.jsDoc) {
-							// @ts-expect-error
-							for (const jsDoc of node.jsDoc) {
+						const jsdoc = get_jsdoc(node);
+
+						if (jsdoc) {
+							for (const jsDoc of jsdoc) {
 								if (jsDoc.comment) {
-									// @ts-expect-error
 									jsDoc.tags?.forEach((tag) => {
-										const kind = tag.tagName.escapedText;
-										if (kind === 'example' || kind === 'default') return; // TODO others?
+										switch (tag.tagName.escapedText) {
+											case 'example':
+											case 'default':
+											case 'deprecated':
+												return; // TODO others?
+										}
 										result.remove(tag.pos, tag.end);
 									});
 								} else {

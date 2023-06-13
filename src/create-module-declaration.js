@@ -161,8 +161,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 				declaration.alias = get_name(name ?? declaration.name);
 				declaration.included = true;
 
-				console.log(declaration);
-
 				for (const { module, name } of declaration.dependencies) {
 					const dependency = trace(module, name);
 					mark(dependency);
@@ -329,19 +327,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 						result.remove(a, b);
 					}
 
-					const params = new Set();
-					if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
-						if (node.typeParameters) {
-							for (const param of node.typeParameters) {
-								params.add(param.name.getText(module.ast));
-							}
-						}
-					}
-
 					walk(node, (node) => {
 						if (is_reference(node)) {
 							const name = node.getText(module.ast);
-							if (params.has(name)) return;
 
 							const declaration = trace(module.file, name);
 

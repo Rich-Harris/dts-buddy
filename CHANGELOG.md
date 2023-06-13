@@ -1,5 +1,11 @@
 # dts-buddy changelog
 
+## 0.1.3
+
+- Preserve `@deprecated` tags
+- More forgiving `pkg.exports` parsing in CLI
+- Use `ts-api-utils` instead of brittle `node.kind` checks
+
 ## 0.1.2
 
 - Work on Windows

@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.4
+
+- Prevent unnecessary `_1` suffixes
+
 ## 0.1.3
 
 - Preserve `@deprecated` tags

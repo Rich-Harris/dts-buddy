@@ -31,6 +31,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 			}
 		}
 
+		console.log(sample, modules);
+
 		await createBundle({
 			project: 'test/tsconfig.json',
 			modules,

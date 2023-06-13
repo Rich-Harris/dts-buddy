@@ -21,10 +21,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 		};
 
 		for (const file of glob('**', { cwd: `${dir}/input`, filesOnly: true })) {
-			const parts = file.split('/');
+			const parts = file.split(/[\/\\]/);
 			const basename = parts.pop();
-
-			console.log({ file, basename, parts });
 
 			if (basename === 'index.js' || basename === 'index.ts' || basename === 'types.d.ts') {
 				const name = [sample, ...parts].join('/');
@@ -32,8 +30,6 @@ for (const sample of fs.readdirSync('test/samples')) {
 				compilerOptions.paths[name] = [`./samples/${sample}/input/${file}`];
 			}
 		}
-
-		console.log(sample, modules);
 
 		await createBundle({
 			project: 'test/tsconfig.json',

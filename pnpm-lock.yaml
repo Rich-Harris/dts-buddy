@@ -29,6 +29,9 @@ dependencies:
   tiny-glob:
     specifier: ^0.2.9
     version: 0.2.9
+  ts-api-utils:
+    specifier: ^0.0.46
+    version: 0.0.46(typescript@5.0.4)
   typescript:
     specifier: ^5.0.4
     version: 5.0.4
@@ -152,6 +155,15 @@ packages:
     dependencies:
       globalyzer: 0.1.0
       globrex: 0.1.2
+    dev: false
+
+  /ts-api-utils@0.0.46(typescript@5.0.4):
+    resolution: {integrity: sha512-YKJeSx39n0mMk+hrpyHKyTgxA3s7Pz/j1cXYR+t8HcwwZupzOR5xDGKnOEw3gmLaUeFUQt3FJD39AH9Ajn/mdA==}
+    engines: {node: '>=16.13.0'}
+    peerDependencies:
+      typescript: '>=4.2.0'
+    dependencies:
+      typescript: 5.0.4
     dev: false
 
   /typescript@5.0.4:

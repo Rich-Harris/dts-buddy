@@ -3,6 +3,7 @@ import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 import globrex from 'globrex';
 import ts from 'typescript';
+import * as tsu from 'ts-api-utils';
 import { getLocator } from 'locate-character';
 import { decode } from '@jridgewell/sourcemap-codec';
 
@@ -216,10 +217,10 @@ export function get_dts(file, created, resolve) {
 
 			module.declarations.set(name, declaration);
 
-			const export_modifier = node.modifiers?.find((node) => node.kind === 93);
+			const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
 
 			if (export_modifier) {
-				const default_modifier = node.modifiers?.find((node) => node.kind === 88);
+				const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
 				module.exports.set(default_modifier ? 'default' : name, name);
 			}
 
@@ -258,8 +259,7 @@ export function get_dts(file, created, resolve) {
 			return;
 		}
 
-		// EOF
-		if (node.kind === 1) return;
+		if (tsu.isEndOfFileToken(node)) return;
 
 		throw new Error(`Unimplemented node type ${node.kind}`);
 	}

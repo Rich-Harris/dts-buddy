@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.5
+
+- Always preserve JSDoc comments with `@default`, `@deprecated` and `@example` tags
+
 ## 0.1.4
 
 - Prevent unnecessary `_1` suffixes

@@ -24,6 +24,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 			const parts = file.split('/');
 			const basename = parts.pop();
 
+			console.log({ file, basename, parts });
+
 			if (basename === 'index.js' || basename === 'index.ts' || basename === 'types.d.ts') {
 				const name = [sample, ...parts].join('/');
 				modules[name] = `${dir}/input/${file}`;

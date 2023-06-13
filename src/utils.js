@@ -97,7 +97,7 @@ export function get_dts(file, created, resolve) {
 		};
 	}
 
-	/** @param {import('typescript').Node} node */
+	/** @param {ts.Node} node */
 	function scan(node) {
 		// follow imports
 		if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -288,8 +288,8 @@ export function resolve_dts(from, to) {
 }
 
 /**
- * @param {import('typescript').Node} node
- * @param {(node: import('typescript').Node) => void} callback
+ * @param {ts.Node} node
+ * @param {(node: ts.Node) => void} callback
  */
 export function walk(node, callback) {
 	callback(node);
@@ -297,14 +297,14 @@ export function walk(node, callback) {
 }
 
 /**
- * @param {import('typescript').Node} node
+ * @param {ts.Node} node
  * @returns {node is
- *   import('typescript').InterfaceDeclaration |
- *   import('typescript').TypeAliasDeclaration |
- *   import('typescript').ClassDeclaration |
- *   import('typescript').FunctionDeclaration |
- *   import('typescript').VariableStatement |
- *   import('typescript').ModuleDeclaration
+ *   ts.InterfaceDeclaration |
+ *   ts.TypeAliasDeclaration |
+ *   ts.ClassDeclaration |
+ *   ts.FunctionDeclaration |
+ *   ts.VariableStatement |
+ *   ts.ModuleDeclaration
  * }
  */
 export function is_declaration(node) {
@@ -319,8 +319,8 @@ export function is_declaration(node) {
 }
 
 /**
- * @param {import('typescript').Node} node
- * @returns {node is import('typescript').Identifier}
+ * @param {ts.Node} node
+ * @returns {node is ts.Identifier}
  */
 export function is_reference(node) {
 	if (!ts.isIdentifier(node)) return false;

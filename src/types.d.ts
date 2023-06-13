@@ -1,4 +1,6 @@
 import { SourceMapMappings } from '@jridgewell/sourcemap-codec';
+import { Location } from 'locate-character';
+import { SourceFile } from 'typescript';
 
 interface Reference {
 	module: string;
@@ -28,8 +30,8 @@ interface ModuleReference {
 export interface Module {
 	file: string;
 	dts: string;
-	ast: import('typescript').SourceFile;
-	locator: (pos: number) => import('locate-character').Location;
+	ast: SourceFile;
+	locator: (pos: number) => Location;
 	source: null | {
 		code: string;
 		map: any; // TODO

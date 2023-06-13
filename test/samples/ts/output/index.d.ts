@@ -1,4 +1,4 @@
-declare module 'my-lib' {
+declare module 'ts' {
 	/** A vector with two components */
 	export interface Vector2 {
 		/** The x component */
@@ -17,8 +17,8 @@ declare module 'my-lib' {
 	export function add(a: Vector2, b: Vector2): Vector2;
 }
 
-declare module 'my-lib/subpackage' {
-	import type { Vector2 } from 'my-lib';
+declare module 'ts/subpackage' {
+	import type { Vector2 } from 'ts';
 	/**
 	 * Multiply two vectors
 	 */

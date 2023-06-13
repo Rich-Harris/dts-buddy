@@ -1,4 +1,0 @@
-{
-	"my-lib": "index.ts",
-	"my-lib/subpackage": "subpackage/index.ts"
-}

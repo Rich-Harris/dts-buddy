@@ -1,8 +1,8 @@
 /**
  * Add two vectors
- * @param {import('./types').Vector2} a
- * @param {import('./types').Vector2} b
- * @returns {import('./types').Vector2}
+ * @param {import('./vectors').Vector2} a
+ * @param {import('./vectors').Vector2} b
+ * @returns {import('./vectors').Vector2}
  */
 export function add(a, b) {
 	return {

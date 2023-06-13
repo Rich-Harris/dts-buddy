@@ -1,4 +1,4 @@
-declare module 'preserved-js-doc-tags' {
+declare module 'preserved-jsdoc-tags' {
 	/**
 	 * Add two numbers
 	 * @deprecated

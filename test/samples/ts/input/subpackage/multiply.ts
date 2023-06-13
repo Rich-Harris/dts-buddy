@@ -1,4 +1,4 @@
-import type { Vector2 } from 'my-lib';
+import type { Vector2 } from 'ts';
 
 /**
  * Multiply two vectors

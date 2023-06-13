@@ -1,8 +1,8 @@
 /**
  * Multiply two vectors
- * @param {import('my-lib').Vector2} a
- * @param {import('my-lib').Vector2} b
- * @returns {import('my-lib').Vector2}
+ * @param {import('basic').Vector2} a
+ * @param {import('basic').Vector2} b
+ * @returns {import('basic').Vector2}
  */
 export function multiply(a, b) {
 	return {

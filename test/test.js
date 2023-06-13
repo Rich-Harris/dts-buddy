@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
@@ -12,15 +13,22 @@ for (const sample of fs.readdirSync('test/samples')) {
 	test(sample, async () => {
 		const dir = `test/samples/${sample}`;
 
-		const modules = JSON.parse(fs.readFileSync(`${dir}/modules.json`, 'utf-8'));
+		/** @type {Record<string, string>} */
+		const modules = {};
 
 		const compilerOptions = {
 			paths: {}
 		};
 
-		for (const [name, value] of Object.entries(modules)) {
-			modules[name] = `${dir}/input/${value}`;
-			compilerOptions.paths[name] = [`./samples/${sample}/input/${value}`];
+		for (const file of glob('**', { cwd: `${dir}/input`, filesOnly: true })) {
+			const parts = file.split('/');
+			const basename = parts.pop();
+
+			if (basename === 'index.js' || basename === 'index.ts' || basename === 'types.d.ts') {
+				const name = [sample, ...parts].join('/');
+				modules[name] = `${dir}/input/${file}`;
+				compilerOptions.paths[name] = [`./samples/${sample}/input/${file}`];
+			}
 		}
 
 		await createBundle({

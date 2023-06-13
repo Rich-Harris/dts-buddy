@@ -7,7 +7,7 @@
 	],
 	"sources": [
 		"../input/index.js",
-		"../input/types.d.ts"
+		"../input/vectors.d.ts"
 	],
 	"sourcesContent": [
 		null,

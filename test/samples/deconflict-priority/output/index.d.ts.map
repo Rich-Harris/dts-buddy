@@ -1,0 +1,20 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"x",
+		"Foo",
+		"Bar"
+	],
+	"sources": [
+		"../input/index.js",
+		"../input/a.d.ts",
+		"../input/b.d.ts"
+	],
+	"sourcesContent": [
+		null,
+		null,
+		null
+	],
+	"mappings": ";iBAIgBA,CAACA;WCJAC,GAAGA;WCCHC,GAAGA"
+}

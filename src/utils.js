@@ -230,6 +230,15 @@ export function get_dts(file, created, resolve) {
 				module.exports.set(default_modifier ? 'default' : name, name);
 			}
 
+			const params = new Set();
+			if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+				if (node.typeParameters) {
+					for (const param of node.typeParameters) {
+						params.add(param.name.getText(module.ast));
+					}
+				}
+			}
+
 			walk(node, (node) => {
 				// `import('./foo').Foo` -> `Foo`
 				if (
@@ -253,6 +262,8 @@ export function get_dts(file, created, resolve) {
 
 				if (is_reference(node)) {
 					const name = node.getText(module.ast);
+					if (params.has(name)) return;
+
 					if (name !== declaration.name) {
 						declaration.dependencies.push({
 							module: file,

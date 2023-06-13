@@ -138,77 +138,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 	// step 2 - treeshaking
 	{
-		/**
-		 * @param {string} id
-		 * @param {string} name
-		 */
-		const reference = (id, name) => {
-			const declaration = trace(id, name);
-			if (!declaration.included) {
-				declaration.included = true;
-
-				for (const { module, name } of declaration.dependencies) {
-					reference(module, name);
-				}
-			}
-		};
-
-		for (const name of exports) {
-			const declaration = trace_export(entry, name);
-			if (declaration) reference(declaration.module, declaration.name);
-		}
-	}
-
-	// step 3 - deconflicting
-	{
-		/**
-		 * @param {string} id
-		 * @param {string} name
-		 * @param {string} alias
-		 */
-		const assign_alias = (id, name, alias) => {
-			const module = bundle.get(id);
-
-			if (module) {
-				if (module.exports.has(name)) {
-					const local = /** @type {string} */ (module.exports.get(name));
-
-					const declaration = module.declarations.get(local);
-					if (declaration) {
-						declaration.alias = alias;
-						return true;
-					}
-
-					const binding = module.imports.get(local);
-					if (binding) {
-						assign_alias(binding.id, binding.name, alias);
-						return true;
-					}
-
-					throw new Error('Something unexpected happened');
-				}
-
-				const binding = module.export_from.get(name);
-				if (binding) {
-					assign_alias(binding.id, binding.name, alias);
-					return true;
-				}
-
-				for (const reference of module.export_all) {
-					if (assign_alias(reference.id, name, alias)) {
-						return true;
-					}
-				}
-			} else {
-				const declaration =
-					external_imports[id]?.[name] ??
-					external_import_alls[id]?.[name] ??
-					external_export_from[id]?.[name];
-
-				declaration.alias = alias;
-			}
-		};
-
 		/** @type {Set<string>} */
 		const names = new Set();
 
@@ -223,45 +152,33 @@ export function create_module_declaration(id, entry, created, resolve) {
 			return name;
 		}
 
-		// fix export names initially...
+		/**
+		 * @param {import('./types').Declaration} declaration
+		 * @param {string} [name]
+		 */
+		const mark = (declaration, name) => {
+			if (!declaration.included) {
+				declaration.alias = get_name(name ?? declaration.name);
+				declaration.included = true;
+
+				for (const { module, name } of declaration.dependencies) {
+					const dependency = trace(module, name);
+					mark(dependency);
+				}
+			}
+		};
+
 		for (const name of exports) {
-			assign_alias(entry, name, get_name(name));
-		}
-
-		// ...and imported bindings...
-		for (const module in external_imports) {
-			if (module === id) continue;
-
-			for (const name in external_imports[module]) {
-				external_imports[module][name].alias ||= get_name(name);
-			}
-		}
-
-		for (const module in external_import_alls) {
-			if (module === id) continue;
-
-			for (const name in external_import_alls[module]) {
-				external_import_alls[module][name].alias ||= get_name(name);
-			}
-		}
-
-		for (const module in external_export_from) {
-			if (module === id) continue;
-
-			for (const name in external_export_from[module]) {
-				external_export_from[module][name].alias ||= get_name(name);
-			}
-		}
-
-		// ...then deconflict everything else
-		for (const module of bundle.values()) {
-			for (const declaration of module.declarations.values()) {
-				declaration.alias ||= get_name(declaration.name);
+			const declaration = trace_export(entry, name);
+			if (declaration) {
+				mark(declaration, name);
+			} else {
+				throw new Error('Something strange happened');
 			}
 		}
 	}
 
-	// step 4 - generate code
+	// step 3 - generate code
 	{
 		content += `declare module '${id}' {`;
 
@@ -410,19 +327,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 						result.remove(a, b);
 					}
 
-					const params = new Set();
-					if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
-						if (node.typeParameters) {
-							for (const param of node.typeParameters) {
-								params.add(param.name.getText(module.ast));
-							}
-						}
-					}
-
 					walk(node, (node) => {
 						if (is_reference(node)) {
 							const name = node.getText(module.ast);
-							if (params.has(name)) return;
 
 							const declaration = trace(module.file, name);
 

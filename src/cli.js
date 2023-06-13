@@ -66,7 +66,7 @@ const program = sade('dts-buddy [bundle]', true)
 		});
 
 		const relative = path.relative(process.cwd(), output);
-		console.log(`Wrote ${c.bold().cyan(relative)} and ${c.bold().cyan(relative + '.map')}\n`);
+		console.error(`Wrote ${c.bold().cyan(relative)} and ${c.bold().cyan(relative + '.map')}\n`);
 	});
 
 program.parse(process.argv);

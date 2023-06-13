@@ -1,5 +1,6 @@
 /**
  * Add two numbers
+ * @deprecated
  * @example
  * const three = add(1, 2);
  * @param {number} a

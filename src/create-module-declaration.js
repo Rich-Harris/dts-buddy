@@ -4,8 +4,6 @@ import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
 import { get_dts, get_jsdoc, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
 
-console.log(ts.SyntaxKind);
-
 /**
  * @param {string} id
  * @param {string} entry

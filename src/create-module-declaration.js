@@ -1,7 +1,10 @@
 import path from 'node:path';
 import ts from 'typescript';
+import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
 import { get_dts, get_jsdoc, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
+
+console.log(ts.SyntaxKind);
 
 /**
  * @param {string} id
@@ -334,10 +337,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 						result.overwrite(identifier.getStart(module.ast), identifier.end, declaration.alias);
 					}
 
-					const export_modifier = node.modifiers?.find((node) => node.kind === 93);
+					const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
 					if (export_modifier) {
 						// remove `default` keyword
-						const default_modifier = node.modifiers?.find((node) => node.kind === 88);
+						const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
 						if (default_modifier) {
 							let b = default_modifier.end;
 							const a = b - 7;
@@ -399,7 +402,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 						throw new Error('TODO add export keyword');
 					}
 
-					const declare_modifier = node.modifiers?.find((node) => node.kind === 136);
+					const declare_modifier = node.modifiers?.find((node) => tsu.isDeclareKeyword(node));
 					if (declare_modifier) {
 						// i'm not sure why typescript turns `export function` in a .ts file to `export declare function`,
 						// but it's weird and we don't want it

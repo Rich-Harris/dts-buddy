@@ -11,6 +11,7 @@
 		"magic-string": "^0.30.0",
 		"sade": "^1.8.1",
 		"tiny-glob": "^0.2.9",
+		"ts-api-utils": "^0.0.46",
 		"typescript": "^5.0.4"
 	},
 	"devDependencies": {

@@ -4,6 +4,8 @@ import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
 import { get_dts, get_jsdoc, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
 
+const preserved_jsdoc_tags = new Set(['default', 'deprecated', 'example']);
+
 /**
  * @param {string} id
  * @param {string} entry
@@ -364,17 +366,18 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 						if (jsdoc) {
 							for (const jsDoc of jsdoc) {
-								if (jsDoc.comment) {
-									jsDoc.tags?.forEach((tag) => {
-										switch (tag.tagName.escapedText) {
-											case 'example':
-											case 'default':
-											case 'deprecated':
-												return; // TODO others?
-										}
+								let should_keep = !!jsDoc.comment;
+
+								jsDoc.tags?.forEach((tag) => {
+									const type = /** @type {string} */ (tag.tagName.escapedText);
+									if (preserved_jsdoc_tags.has(type)) {
+										should_keep = true;
+									} else {
 										result.remove(tag.pos, tag.end);
-									});
-								} else {
+									}
+								});
+
+								if (!should_keep) {
 									result.remove(jsDoc.pos, jsDoc.end);
 								}
 							}

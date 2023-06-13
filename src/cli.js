@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
 import sade from 'sade';
 import c from 'kleur';
 import { createBundle } from './index.js';
@@ -28,13 +29,7 @@ const program = sade('dts-buddy [bundle]', true)
 		}
 
 		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-		if (!output) output = pkg.types;
-
-		if (!output) {
-			exit(
-				'No output specified. Either add a "types" field to your package.json, or run `dts-buddy <output>`'
-			);
-		}
+		if (!output) output = pkg.types ?? 'index.d.ts';
 
 		if (!pkg.exports) {
 			exit('No "exports" field in package.json');
@@ -55,13 +50,23 @@ const program = sade('dts-buddy [bundle]', true)
 		}
 
 		if (Object.keys(modules).length === 0) {
-			exit('No entry points found in pkg.exports');
+			if (typeof pkg.exports === 'string') {
+				modules[pkg.name] = pkg.exports;
+			} else if (pkg.exports['import'] || pkg.exports['default']) {
+				modules[pkg.name] = pkg.exports['import'] ?? pkg.exports['default'];
+			} else {
+				exit('No entry points found in pkg.exports');
+			}
 		}
-		
+
 		await createBundle({
 			output,
-			modules
+			modules,
+			project: opts.project
 		});
+
+		const relative = path.relative(process.cwd(), output);
+		console.error(`Wrote ${c.bold().cyan(relative)} and ${c.bold().cyan(relative + '.map')}\n`);
 	});
 
 program.parse(process.argv);

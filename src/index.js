@@ -84,9 +84,6 @@ export async function createBundle(options) {
 
 		let types = '';
 
-		/** @type {Map<string, string[]>} **/
-		const all_exports = new Map();
-
 		/** @type {Map<string, Map<string, import('./types').Mapping>>} */
 		const all_mappings = new Map();
 

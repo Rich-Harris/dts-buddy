@@ -6,6 +6,7 @@
 		"declarationDir": "types",
 		"declarationMap": true,
 		"emitDeclarationOnly": true,
+		"noUnusedLocals": true,
 		"module": "esnext",
 		"target": "esnext",
 		"moduleResolution": "bundler",

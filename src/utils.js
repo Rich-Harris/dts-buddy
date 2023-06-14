@@ -7,10 +7,75 @@ import * as tsu from 'ts-api-utils';
 import { getLocator } from 'locate-character';
 import { decode } from '@jridgewell/sourcemap-codec';
 
+const preserved_jsdoc_tags = new Set(['default', 'deprecated', 'example']);
+
 /** @param {ts.Node} node */
-export function get_jsdoc(node) {
+function get_jsdoc(node) {
 	const { jsDoc } = /** @type {{ jsDoc?: ts.JSDoc[] }} */ (/** @type {*} */ (node));
 	return jsDoc;
+}
+
+/**
+ * @param {ts.Node} node
+ * @param {import('magic-string').default} code
+ */
+export function clean_jsdoc(node, code) {
+	const jsdoc = get_jsdoc(node);
+
+	if (jsdoc) {
+		for (const jsDoc of jsdoc) {
+			let should_keep = !!jsDoc.comment;
+
+			jsDoc.tags?.forEach((tag) => {
+				const type = /** @type {string} */ (tag.tagName.escapedText);
+
+				// @ts-ignore
+				const name = /** @type {ts.Identifier | undefined} */ (tag.name);
+				if (name) {
+					// @ts-ignore
+					if (tag.isBracketed) {
+						// in JSDoc, we might have an optional [foo] parameter. in a .d.ts context,
+						// the brackets cause the parameter to be interpreted as a comment,
+						// so we have to remove them
+						let a = name.pos - 1;
+						let b = name.end;
+
+						while (code.original[a] === ' ') a -= 1;
+						while (code.original[b] === ' ') b += 1;
+
+						code.remove(a, name.pos);
+						code.remove(name.end, b + 1);
+					}
+				}
+
+				if (tag.comment) {
+					should_keep = true;
+
+					const typeExpression = /** @type {ts.JSDocTypeExpression | undefined} */ (
+						// @ts-ignore
+						tag.typeExpression
+					);
+
+					if (typeExpression) {
+						// turn `@param {string} foo description` into `@param foo description`
+						let a = typeExpression.pos;
+						let b = typeExpression.end;
+
+						while (code.original[b] === ' ') b += 1;
+						code.remove(a, b);
+					}
+				} else if (preserved_jsdoc_tags.has(type)) {
+					should_keep = true;
+				} else {
+					code.remove(tag.pos, tag.end);
+				}
+			});
+
+			if (!should_keep) {
+				code.remove(jsDoc.pos, jsDoc.end);
+			}
+		}
+	}
 }
 
 /**

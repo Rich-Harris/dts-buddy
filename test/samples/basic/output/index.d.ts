@@ -8,6 +8,8 @@ declare module 'basic' {
 	}
 	/**
 	 * Add two vectors
+	 * @param a the first vector
+	 * @param b the second vector
 	 * */
 	export function add(a: Vector2, b: Vector2): Vector2;
 }

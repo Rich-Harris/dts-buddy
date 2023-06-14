@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.6
+
+- Preserve descriptions in JSDoc comments, remove brackets from parameters
+
 ## 0.1.5
 
 - Always preserve JSDoc comments with `@default`, `@deprecated` and `@example` tags

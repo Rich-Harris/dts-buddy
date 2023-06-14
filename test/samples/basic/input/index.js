@@ -1,7 +1,7 @@
 /**
  * Add two vectors
- * @param {import('./types').Vector2} a
- * @param {import('./types').Vector2} b
+ * @param {import('./types').Vector2} a the first vector
+ * @param {import('./types').Vector2} b the second vector
  * @returns {import('./types').Vector2}
  */
 export function add(a, b) {

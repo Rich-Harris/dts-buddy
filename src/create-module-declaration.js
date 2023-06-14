@@ -2,9 +2,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
-import { get_dts, get_jsdoc, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
-
-const preserved_jsdoc_tags = new Set(['default', 'deprecated', 'example']);
+import { clean_jsdoc, get_dts, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
 
 /**
  * @param {string} id
@@ -362,26 +360,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 							}
 						}
 
-						const jsdoc = get_jsdoc(node);
-
-						if (jsdoc) {
-							for (const jsDoc of jsdoc) {
-								let should_keep = !!jsDoc.comment;
-
-								jsDoc.tags?.forEach((tag) => {
-									const type = /** @type {string} */ (tag.tagName.escapedText);
-									if (preserved_jsdoc_tags.has(type)) {
-										should_keep = true;
-									} else {
-										result.remove(tag.pos, tag.end);
-									}
-								});
-
-								if (!should_keep) {
-									result.remove(jsDoc.pos, jsDoc.end);
-								}
-							}
-						}
+						clean_jsdoc(node, result);
 					});
 				}
 			});

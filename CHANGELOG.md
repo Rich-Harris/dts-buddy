@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.7
+
+- Bump `locate-character` dependency
+
 ## 0.1.6
 
 - Preserve descriptions in JSDoc comments, remove brackets from parameters

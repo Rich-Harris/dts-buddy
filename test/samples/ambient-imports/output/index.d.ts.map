@@ -1,0 +1,14 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"Foo"
+	],
+	"sources": [
+		"../input/types.d.ts"
+	],
+	"sourcesContent": [
+		null
+	],
+	"mappings": ";;;kBAEiBA,GAAGA"
+}

@@ -90,6 +90,9 @@ export async function createBundle(options) {
 		/** @type {Set<string>} */
 		const ambient_modules = new Set();
 
+		/** @type {Set<string>} */
+		const external_ambient_modules = new Set();
+
 		let first = true;
 
 		/**
@@ -125,8 +128,12 @@ export async function createBundle(options) {
 
 			types += content;
 			all_mappings.set(id, mappings);
-			for (const id of ambient) {
-				ambient_modules.add(id);
+			for (const dep of ambient) {
+				if (dep.external) {
+					external_ambient_modules.add(dep.id);
+				} else {
+					ambient_modules.add(dep.id);
+				}
 			}
 		}
 
@@ -150,6 +157,14 @@ export async function createBundle(options) {
 			});
 
 			types += result.trim().toString();
+		}
+
+		if (external_ambient_modules.size > 0) {
+			const imports = Array.from(external_ambient_modules)
+				.map((id) => `import '${id}';`)
+				.join('\n');
+
+			types = `${imports}\n\n${types}`;
 		}
 
 		// finally, add back exports as appropriate

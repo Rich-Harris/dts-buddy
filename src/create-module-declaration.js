@@ -12,7 +12,7 @@ import { clean_jsdoc, get_dts, is_declaration, is_reference, resolve_dts, walk }
  * @returns {{
  *   content: string;
  *   mappings: Map<string, import('./types').Mapping>;
- *   ambient: string[];
+ *   ambient: import('./types').ModuleReference[];
  * }}
  */
 export function create_module_declaration(id, entry, created, resolve) {
@@ -21,7 +21,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/** @type {Map<string, import('./types').Mapping>} */
 	const mappings = new Map();
 
-	/** @type {string[]} */
+	/** @type {import('./types').ModuleReference[]} */
 	const ambient = [];
 
 	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
@@ -73,9 +73,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			}
 
 			for (const dep of module.ambient_imports) {
-				if (!dep.external) {
-					ambient.push(dep.id);
-				}
+				ambient.push(dep);
 			}
 
 			for (const binding of module.imports.values()) {

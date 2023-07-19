@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.8
+
+- Include external ambient imports ([#27](https://github.com/Rich-Harris/dts-buddy/pull/27))
+
 ## 0.1.7
 
 - Bump `locate-character` dependency

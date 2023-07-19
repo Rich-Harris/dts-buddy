@@ -1,6 +1,6 @@
 {
 	"name": "dts-buddy",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"type": "module",
 	"dependencies": {
 		"@jridgewell/source-map": "^0.3.3",

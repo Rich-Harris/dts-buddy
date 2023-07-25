@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.9
+
+- Use reference directives for external ambient imports ([#29](https://github.com/Rich-Harris/dts-buddy/pull/29))
+
 ## 0.1.8
 
 - Include external ambient imports ([#27](https://github.com/Rich-Harris/dts-buddy/pull/27))

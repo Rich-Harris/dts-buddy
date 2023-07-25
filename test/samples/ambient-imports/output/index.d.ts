@@ -1,4 +1,4 @@
-import 'some-ambient-import';
+/// <reference types="some-ambient-import" />
 
 declare module 'ambient-imports' {
 	export interface Foo {}

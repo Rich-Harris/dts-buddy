@@ -161,7 +161,7 @@ export async function createBundle(options) {
 
 		if (external_ambient_modules.size > 0) {
 			const imports = Array.from(external_ambient_modules)
-				.map((id) => `import '${id}';`)
+				.map((id) => `/// <reference types="${id}" />`)
 				.join('\n');
 
 			types = `${imports}\n\n${types}`;

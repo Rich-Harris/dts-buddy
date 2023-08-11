@@ -246,12 +246,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 						return;
 					}
 
-					if (identifier && declaration.alias !== declaration.name) {
-						result.overwrite(identifier.getStart(module.ast), identifier.end, declaration.alias);
-					}
-
 					const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
-					if (export_modifier) {
+					if (export_modifier && declaration.alias !== 'default') {
 						// remove `default` keyword
 						const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
 						if (default_modifier) {
@@ -331,7 +327,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 							const declaration = trace(module.file, name);
 
-							if (declaration.alias !== name) {
+							if (declaration.alias !== name && declaration.alias && declaration.alias !== 'default') {
 								result.overwrite(node.getStart(module.ast), node.getEnd(), declaration.alias);
 							}
 						}

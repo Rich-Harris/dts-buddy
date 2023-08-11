@@ -341,6 +341,12 @@ export function get_dts(file, created, resolve) {
 			return;
 		}
 
+		if (ts.isExportAssignment(node)) {
+			const name = node.expression.getText(module.ast);
+			module.exports.set('default', name);
+			return;
+		}
+
 		if (tsu.isEndOfFileToken(node)) return;
 
 		throw new Error(`Unimplemented node type ${node.kind}`);

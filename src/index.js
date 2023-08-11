@@ -53,6 +53,7 @@ export async function createBundle(options) {
 			declarationDir: undefined,
 			declarationMap: true,
 			emitDeclarationOnly: true,
+			lib: undefined,
 			moduleResolution: undefined,
 			noEmit: false,
 			noEmitOnError: false,

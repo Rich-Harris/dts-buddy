@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.11
+
+- Handle default exports ([#32](https://github.com/Rich-Harris/dts-buddy/pull/32))
+
 ## 0.1.10
 
 - Override `lib` option ([#31](https://github.com/Rich-Harris/dts-buddy/pull/31))

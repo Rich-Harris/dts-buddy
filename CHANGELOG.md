@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.12
+
+- Remove `declare module` blocks ([#33](https://github.com/Rich-Harris/dts-buddy/pull/33))
+
 ## 0.1.11
 
 - Handle default exports ([#32](https://github.com/Rich-Harris/dts-buddy/pull/32))

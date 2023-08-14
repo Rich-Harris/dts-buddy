@@ -227,6 +227,12 @@ export function create_module_declaration(id, entry, created, resolve) {
 					return;
 				}
 
+				// remove `declare module 'foo'`
+				if (ts.isModuleDeclaration(node) && node.modifiers?.some(modifier => tsu.isDeclareKeyword(modifier))) {
+					result.remove(node.pos, node.end);
+					return;
+				}
+
 				if (is_declaration(node)) {
 					const identifier = ts.isVariableStatement(node)
 						? ts.getNameOfDeclaration(node.declarationList.declarations[0])

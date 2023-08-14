@@ -347,6 +347,10 @@ export function get_dts(file, created, resolve) {
 			return;
 		}
 
+		if (ts.isModuleDeclaration(node)) {
+			return;
+		}
+
 		if (tsu.isEndOfFileToken(node)) return;
 
 		throw new Error(`Unimplemented node type ${node.kind}`);

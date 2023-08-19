@@ -65,12 +65,20 @@ Pick a place to write your `.d.ts` file to — e.g. `types/index.d.ts` — then 
     }
   },
   "scripts": {
-+    "prepublishOnly": "node scripts/generate-dts-bundle.js"
++    "prepublishOnly": "dts-buddy"
   }
 }
 ```
 
-`dts-buddy` will infer the entry points and the output location from your `package.json`. You can also use the JavaScript API directly:
+`dts-buddy` will infer the entry points and the output location from your `package.json`.
+
+In some cases you may need to specify the entry points and output location manually (for example, you want to use a `.d.ts` file that re-exports from your `.js` file as an entry point), in which case:
+
+```
+dts-buddy types/index.d.ts -m my-lib:src/index.js -m my-lib/subpackage:src/subpackage.js
+```
+
+You can also use the JavaScript API directly:
 
 ```js
 // scripts/generate-dts-bundle.js

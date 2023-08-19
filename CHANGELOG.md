@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.1.13
+
+- Allow `modules` to be specified via the CLI ([#35](https://github.com/Rich-Harris/dts-buddy/pull/35))
+
 ## 0.1.12
 
 - Remove `declare module` blocks ([#33](https://github.com/Rich-Harris/dts-buddy/pull/33))

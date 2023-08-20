@@ -434,3 +434,34 @@ export function is_reference(node) {
 
 	return true;
 }
+
+/**
+ * parse tsconfig.json with typescript api
+ *
+ * @param {string} tsconfig_file
+ * @returns {{include: string[]|undefined, exclude: string[]|undefined,compilerOptions: ts.CompilerOptions}}}
+ * @throws {Error} if ts api returns error diagnostics
+ */
+export function parse_tsconfig(tsconfig_file) {
+	const {config,error: read_diagnostic} = ts.readConfigFile(tsconfig_file, ts.sys.readFile)
+	/**@type {(error?: ts.Diagnostic)=> boolean} */
+	const isError = (d) => d?.category === ts.DiagnosticCategory.Error;
+	if(isError(read_diagnostic)) {
+		throw new Error(`failed to read ${tsconfig_file}. ${read_diagnostic?.messageText}`)
+	}
+	const {raw,options,errors: parse_diagnostics} = ts.parseJsonConfigFileContent(
+		config,
+		ts.sys,
+		path.dirname(tsconfig_file)
+	)
+	const parse_errors = parse_diagnostics?.filter(isError)
+	if(parse_errors.length > 0) {
+		throw new Error(`${parse_errors.length} errors while parsing ${tsconfig_file}. run "tsc --project ${tsconfig_file} --showConfig" for details`)
+	}
+	// only returns what's needed later on
+	return {
+		include: raw.include,
+		exclude: raw.exclude,
+		compilerOptions: options
+	}
+}

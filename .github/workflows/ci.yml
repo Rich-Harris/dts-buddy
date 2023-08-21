@@ -33,7 +33,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: lint
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() }} # allows checks to run if one fails so we can put them all in the same job
         run: pnpm lint
       - name: check
         if: ${{ !cancelled() }}

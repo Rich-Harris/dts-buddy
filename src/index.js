@@ -4,7 +4,7 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { getLocator } from 'locate-character';
 import { SourceMapGenerator } from '@jridgewell/source-map';
-import {clean_jsdoc, get_input_files, is_declaration, parse_tsconfig, resolve_dts, walk, write} from './utils.js';
+import { clean_jsdoc, get_input_files, is_declaration, parse_tsconfig, resolve_dts, walk, write } from './utils.js';
 import { create_module_declaration } from './create-module-declaration.js';
 
 /**

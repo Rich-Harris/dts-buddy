@@ -12,14 +12,6 @@
 				"useTabs": false,
 				"tabWidth": 2
 			}
-		},
-		{
-			"files": [
-				"test/samples/**/output/**"
-			],
-			"options": {
-				"requirePragma": true
-			}
 		}
 	]
 }

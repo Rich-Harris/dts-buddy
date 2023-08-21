@@ -23,9 +23,9 @@
 	"scripts": {
 		"prepublishOnly": "node src/cli.js",
 		"test": "node test/test.js",
-		"check:types": "tsc --noEmit --emitDeclarationOnly false",
-		"check:format": "prettier --ignore-path .gitignore --ignore-path .prettierignore --cache --check .",
-		"format": "pnpm check:format --write"
+		"check": "tsc --noEmit --emitDeclarationOnly false",
+		"lint": "prettier --ignore-path .gitignore --ignore-path .prettierignore --cache --check .",
+		"format": "pnpm lint --write"
 	},
 	"exports": {
 		".": {

@@ -5,9 +5,7 @@
 	"printWidth": 100,
 	"overrides": [
 		{
-			"files": [
-				"README.md"
-			],
+			"files": ["README.md"],
 			"options": {
 				"useTabs": false,
 				"tabWidth": 2

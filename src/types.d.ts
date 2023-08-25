@@ -31,7 +31,7 @@ export interface Module {
 	file: string;
 	dts: string;
 	ast: SourceFile;
-	locator: (pos: number) => Location;
+	locator: (pos: number) => Location | undefined;
 	source: null | {
 		code: string;
 		map: any; // TODO

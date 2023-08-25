@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@jridgewell/source-map':
-    specifier: ^0.3.3
-    version: 0.3.3
+    specifier: ^0.3.5
+    version: 0.3.5
   '@jridgewell/sourcemap-codec':
     specifier: ^1.4.15
     version: 1.4.15
@@ -21,8 +21,8 @@ dependencies:
     specifier: ^3.0.0
     version: 3.0.0
   magic-string:
-    specifier: ^0.30.0
-    version: 0.30.0
+    specifier: ^0.30.2
+    version: 0.30.2
   sade:
     specifier: ^1.8.1
     version: 1.8.1
@@ -30,10 +30,10 @@ dependencies:
     specifier: ^0.2.9
     version: 0.2.9
   ts-api-utils:
-    specifier: ^0.0.46
-    version: 0.0.46(typescript@5.0.4)
+    specifier: ^1.0.2
+    version: 1.0.2(typescript@5.0.4)
   typescript:
-    specifier: ^5.0.4
+    specifier: ~5.0.4
     version: 5.0.4
 
 devDependencies:
@@ -41,11 +41,11 @@ devDependencies:
     specifier: ^0.1.2
     version: 0.1.2
   '@types/node':
-    specifier: ^20.2.1
-    version: 20.2.1
+    specifier: ^20.5.1
+    version: 20.5.1
   prettier:
-    specifier: ^2.8.8
-    version: 2.8.8
+    specifier: ^3.0.2
+    version: 3.0.2
   uvu:
     specifier: ^0.5.6
     version: 0.5.6
@@ -71,8 +71,8 @@ packages:
     engines: {node: '>=6.0.0'}
     dev: false
 
-  /@jridgewell/source-map@0.3.3:
-    resolution: {integrity: sha512-b+fsZXeLYi9fEULmfBrhxn4IrPlINf8fiNarzTof004v3lFdntdwa9PF7vFJqm3mg7s+ScJMxXaE3Acp1irZcg==}
+  /@jridgewell/source-map@0.3.5:
+    resolution: {integrity: sha512-UTYAUj/wviwdsMfzoSJspJxbkH5o1snzwX0//0ENX1u/55kkZZkcTZP6u9bwKGkv+dkk9at4m1Cpt0uY80kcpQ==}
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.18
@@ -97,8 +97,8 @@ packages:
     resolution: {integrity: sha512-W+8iW69LnEae5H09PxjpmI3CdJyKUTBAoDyqWx6T5ewhX5unBHYYQsGYXlXQP8l3HE/Y71vswPAvxkJC92FQhQ==}
     dev: true
 
-  /@types/node@20.2.1:
-    resolution: {integrity: sha512-DqJociPbZP1lbZ5SQPk4oag6W7AyaGMO6gSfRwq3PWl4PXTwJpRQJhDq4W0kzrg3w6tJ1SwlvGZ5uKFHY13LIg==}
+  /@types/node@20.5.1:
+    resolution: {integrity: sha512-4tT2UrL5LBqDwoed9wZ6N3umC4Yhz3W3FloMmiiG4JwmUJWpie0c7lcnUNd4gtMKuDEO4wRVS8B6Xa0uMRsMKg==}
     dev: true
 
   /dequal@2.0.3:
@@ -127,8 +127,8 @@ packages:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
     dev: false
 
-  /magic-string@0.30.0:
-    resolution: {integrity: sha512-LA+31JYDJLs82r2ScLrlz1GjSgu66ZV518eyWT+S8VhyQn/JL0u9MeBOvQMGYiPk1DBiSN9DDMOcXvigJZaViQ==}
+  /magic-string@0.30.2:
+    resolution: {integrity: sha512-lNZdu7pewtq/ZvWUp9Wpf/x7WzMTsR26TWV03BRZrXFsv+BI6dy8RAiKgm1uM/kyR0rCfUcqvOlXKG66KhIGug==}
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
@@ -138,9 +138,9 @@ packages:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
 
-  /prettier@2.8.8:
-    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
-    engines: {node: '>=10.13.0'}
+  /prettier@3.0.2:
+    resolution: {integrity: sha512-o2YR9qtniXvwEZlOKbveKfDQVyqxbEIWn48Z8m3ZJjBjcCmUy3xZGIv+7AkaeuaTr6yPXJjwv07ZWlsWbEy1rQ==}
+    engines: {node: '>=14'}
     hasBin: true
     dev: true
 
@@ -157,8 +157,8 @@ packages:
       globrex: 0.1.2
     dev: false
 
-  /ts-api-utils@0.0.46(typescript@5.0.4):
-    resolution: {integrity: sha512-YKJeSx39n0mMk+hrpyHKyTgxA3s7Pz/j1cXYR+t8HcwwZupzOR5xDGKnOEw3gmLaUeFUQt3FJD39AH9Ajn/mdA==}
+  /ts-api-utils@1.0.2(typescript@5.0.4):
+    resolution: {integrity: sha512-Cbu4nIqnEdd+THNEsBdkolnOXhg0I8XteoHaEKgvsxpsbWda4IsUut2c187HxywQCvveojow0Dgw/amxtSKVkQ==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
       typescript: '>=4.2.0'

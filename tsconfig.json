@@ -15,5 +15,5 @@
 			"my-lib": ["./test/input/types"]
 		}
 	},
-	"include": ["src", "scripts", "test/test.js"]
+	"include": ["src", "scripts", "test"]
 }

@@ -353,7 +353,7 @@ export function get_dts(file, created, resolve) {
 
 		if (tsu.isEndOfFileToken(node)) return;
 
-		throw new Error(`Unimplemented node type ${node.kind}`);
+		throw new Error(`Unimplemented node type ${ts.SyntaxKind[node.kind]}`);
 	}
 
 	ast.statements.forEach(scan);

@@ -1,6 +1,12 @@
 {
 	"name": "dts-buddy",
 	"version": "0.1.13",
+	"description": "A tool for creating .d.ts bundles",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Rich-Harris/dts-buddy"
+	},
+	"license": "MIT",
 	"type": "module",
 	"dependencies": {
 		"@jridgewell/source-map": "^0.3.3",

@@ -11,13 +11,9 @@
 		"target": "esnext",
 		"moduleResolution": "bundler",
 		"strict": true,
-		"paths":{
-			"my-lib":["./test/input/types"]
+		"paths": {
+			"my-lib": ["./test/input/types"]
 		}
 	},
-	"include": [
-		"src",
-		"scripts",
-		"test"
-	]
+	"include": ["src", "scripts", "test"]
 }

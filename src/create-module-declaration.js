@@ -228,7 +228,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 				}
 
 				// remove `declare module 'foo'`
-				if (ts.isModuleDeclaration(node) && node.modifiers?.some(modifier => tsu.isDeclareKeyword(modifier))) {
+				if (
+					ts.isModuleDeclaration(node) &&
+					node.modifiers?.some((modifier) => tsu.isDeclareKeyword(modifier))
+				) {
 					result.remove(node.pos, node.end);
 					return;
 				}
@@ -333,7 +336,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 							const declaration = trace(module.file, name);
 
-							if (declaration.alias !== name && declaration.alias && declaration.alias !== 'default') {
+							if (
+								declaration.alias !== name &&
+								declaration.alias &&
+								declaration.alias !== 'default'
+							) {
 								result.overwrite(node.getStart(module.ast), node.getEnd(), declaration.alias);
 							}
 						}

@@ -446,20 +446,22 @@ export function is_reference(node) {
  * @throws {Error} if ts api returns error diagnostics
  */
 export function parse_tsconfig(tsconfig_file) {
-	const {config,error: read_diagnostic} = ts.readConfigFile(tsconfig_file, ts.sys.readFile)
+	const { config, error: read_diagnostic } = ts.readConfigFile(tsconfig_file, ts.sys.readFile);
 	/** @type {(error?: ts.Diagnostic)=> boolean} */
 	const isError = (d) => d?.category === ts.DiagnosticCategory.Error;
-	if(isError(read_diagnostic)) {
-		throw new Error(`failed to read ${tsconfig_file}. ${read_diagnostic?.messageText}`)
+	if (isError(read_diagnostic)) {
+		throw new Error(`failed to read ${tsconfig_file}. ${read_diagnostic?.messageText}`);
 	}
-	const { raw, options, errors: parse_diagnostics } = ts.parseJsonConfigFileContent(
-		config,
-		ts.sys,
-		path.dirname(tsconfig_file)
-	)
-	const parse_errors = parse_diagnostics?.filter(isError)
+	const {
+		raw,
+		options,
+		errors: parse_diagnostics
+	} = ts.parseJsonConfigFileContent(config, ts.sys, path.dirname(tsconfig_file));
+	const parse_errors = parse_diagnostics?.filter(isError);
 	if (parse_errors.length > 0) {
-		throw new Error(`${parse_errors.length} errors while parsing ${tsconfig_file}. run "tsc --project ${tsconfig_file} --showConfig" for details`)
+		throw new Error(
+			`${parse_errors.length} errors while parsing ${tsconfig_file}. run "tsc --project ${tsconfig_file} --showConfig" for details`
+		);
 	}
 
 	unwrap_enums(options);
@@ -469,7 +471,7 @@ export function parse_tsconfig(tsconfig_file) {
 		include: raw.include,
 		exclude: raw.exclude,
 		compilerOptions: options
-	}
+	};
 }
 
 /**
@@ -479,24 +481,25 @@ export function parse_tsconfig(tsconfig_file) {
 function unwrap_enums(compilerOptions) {
 	/** @type {Record<string,Record<number,string>>}*/
 	const enum_mappings = {
-		module: {...ts.ModuleKind},
+		module: { ...ts.ModuleKind },
 		moduleResolution: {
 			...ts.ModuleResolutionKind,
 			2: 'node' //ensure it's using the old generic 'node' value instead of node10
 		},
-		target:{
+		target: {
 			...ts.ScriptTarget,
 			99: 'esnext' //ensure it's not using 'latest'
 		}
-
 	};
-	for (const [option,mapping] of Object.entries(enum_mappings)) {
-		if(compilerOptions[option] != null
-			&& typeof compilerOptions[option] === 'number'
+	for (const [option, mapping] of Object.entries(enum_mappings)) {
+		if (
+			compilerOptions[option] != null &&
+			typeof compilerOptions[option] === 'number' &&
 			// @ts-expect-error dynamic access
-			&& mapping[compilerOptions[option]] != null) {
+			mapping[compilerOptions[option]] != null
+		) {
 			// @ts-expect-error dynamic access
-			compilerOptions[option] = mapping[compilerOptions[option]]
+			compilerOptions[option] = mapping[compilerOptions[option]];
 		}
 	}
 }

@@ -1,5 +1,10 @@
 # dts-buddy changelog
 
+## 0.1.14
+
+- Improve error message when encountering unknown node types ([#39](https://github.com/Rich-Harris/dts-buddy/pull/39))
+- Add license info ([#38](https://github.com/Rich-Harris/dts-buddy/pull/38))
+
 ## 0.1.13
 
 - Allow `modules` to be specified via the CLI ([#35](https://github.com/Rich-Harris/dts-buddy/pull/35))

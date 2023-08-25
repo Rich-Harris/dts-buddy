@@ -32,4 +32,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - name: lint
+        if: ${{ !cancelled() }} # allows checks to run if one fails so we can put them all in the same job
+        run: pnpm lint
+      - name: check
+        if: ${{ !cancelled() }}
+        run: pnpm check
+      - name: test
+        if: ${{ !cancelled() }}
+        run: pnpm test

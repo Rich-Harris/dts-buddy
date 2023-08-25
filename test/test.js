@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
@@ -17,6 +16,7 @@ for (const sample of fs.readdirSync('test/samples')) {
 		const modules = {};
 
 		const compilerOptions = {
+			/** @type {Record<string, string[]>} */
 			paths: {}
 		};
 

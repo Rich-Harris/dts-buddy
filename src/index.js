@@ -198,27 +198,31 @@ export async function createBundle(options) {
 
 							if (mapping) {
 								const start = identifier.getStart(ast);
-								let { line, column } = locator(start);
+								const location = locator(start);
 
-								const relative = path
-									.relative(path.dirname(output), mapping.source)
-									.replace(/\\/g, '/');
+								if (location) {
+									let { line, column } = location;
 
-								smg.addMapping({
-									generated: { line, column },
-									original: { line: mapping.line, column: mapping.column },
-									source: relative,
-									name
-								});
+									const relative = path
+										.relative(path.dirname(output), mapping.source)
+										.replace(/\\/g, '/');
 
-								smg.addMapping({
-									generated: { line, column: column + name.length },
-									original: { line: mapping.line, column: mapping.column + name.length },
-									source: relative,
-									name
-								});
+									smg.addMapping({
+										generated: { line, column },
+										original: { line: mapping.line, column: mapping.column },
+										source: relative,
+										name
+									});
 
-								sources.add(mapping.source);
+									smg.addMapping({
+										generated: { line, column: column + name.length },
+										original: { line: mapping.line, column: mapping.column + name.length },
+										source: relative,
+										name
+									});
+
+									sources.add(mapping.source);
+								}
 							}
 						}
 					}

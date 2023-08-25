@@ -28,7 +28,10 @@
 	},
 	"scripts": {
 		"prepublishOnly": "node src/cli.js",
-		"test": "node test/test.js"
+		"test": "node test/test.js",
+		"check": "tsc --noEmit --emitDeclarationOnly false",
+		"lint": "prettier --ignore-path .gitignore --ignore-path .prettierignore --cache --check .",
+		"format": "pnpm lint --write"
 	},
 	"exports": {
 		".": {

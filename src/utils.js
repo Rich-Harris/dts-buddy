@@ -461,10 +461,42 @@ export function parse_tsconfig(tsconfig_file) {
 	if (parse_errors.length > 0) {
 		throw new Error(`${parse_errors.length} errors while parsing ${tsconfig_file}. run "tsc --project ${tsconfig_file} --showConfig" for details`)
 	}
+
+	unwrap_enums(options);
+
 	// only returns what's needed later on
 	return {
 		include: raw.include,
 		exclude: raw.exclude,
 		compilerOptions: options
+	}
+}
+
+/**
+ * revert enum number values to string representations for module, moduleResolution and target to work around a quirk in ts
+ * @param {ts.CompilerOptions} compilerOptions
+ */
+function unwrap_enums(compilerOptions) {
+	/** @type {Record<string,Record<number,string>>}*/
+	const enum_mappings = {
+		module: {...ts.ModuleKind},
+		moduleResolution: {
+			...ts.ModuleResolutionKind,
+			2: 'node' //ensure it's using the old generic 'node' value instead of node10
+		},
+		target:{
+			...ts.ScriptTarget,
+			99: 'esnext' //ensure it's not using 'latest'
+		}
+
+	};
+	for (const [option,mapping] of Object.entries(enum_mappings)) {
+		if(compilerOptions[option] != null
+			&& typeof compilerOptions[option] === 'number'
+			// @ts-expect-error dynamic access
+			&& mapping[compilerOptions[option]] != null) {
+			// @ts-expect-error dynamic access
+			compilerOptions[option] = mapping[compilerOptions[option]]
+		}
 	}
 }

@@ -473,9 +473,7 @@ export function parse_tsconfig(tsconfig_file) {
 function report_ts_errors(tsconfig_file, phase, diagnostics) {
 	const errors = diagnostics.filter((d) => d.category === ts.DiagnosticCategory.Error);
 	if (errors.length > 0) {
-		const msg = `parsing ${tsconfig_file} failed: ${errors.length} error${
-			errors.length > 1 ? 's' : ''
-		} occurred during ${phase}`;
+		const msg = `parsing ${tsconfig_file} failed during ${phase}`;
 		console.error(
 			`${msg}\n`,
 			ts.formatDiagnostics(diagnostics, {

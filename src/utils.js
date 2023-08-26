@@ -447,25 +447,15 @@ export function is_reference(node) {
  */
 export function parse_tsconfig(tsconfig_file) {
 	const { config, error: read_diagnostic } = ts.readConfigFile(tsconfig_file, ts.sys.readFile);
-	/** @type {(error?: ts.Diagnostic)=> boolean} */
-	const isError = (d) => d?.category === ts.DiagnosticCategory.Error;
-	if (isError(read_diagnostic)) {
-		throw new Error(`failed to read ${tsconfig_file}. ${read_diagnostic?.messageText}`);
+	if(read_diagnostic != null) {
+		report_ts_errors(tsconfig_file,'readConfigFile',[read_diagnostic]);
 	}
 	const {
 		raw,
 		options,
 		errors: parse_diagnostics
 	} = ts.parseJsonConfigFileContent(config, ts.sys, path.dirname(tsconfig_file));
-	const parse_errors = parse_diagnostics?.filter(isError);
-	if (parse_errors.length > 0) {
-		throw new Error(
-			`${parse_errors.length} errors while parsing ${tsconfig_file}. run "tsc --project ${tsconfig_file} --showConfig" for details`
-		);
-	}
-
-	unwrap_enums(options);
-
+	report_ts_errors(tsconfig_file,'parseJsonConfigFileContent',parse_diagnostics);
 	// only returns what's needed later on
 	return {
 		include: raw.include,
@@ -475,31 +465,16 @@ export function parse_tsconfig(tsconfig_file) {
 }
 
 /**
- * revert enum number values to string representations for module, moduleResolution and target to work around a quirk in ts
- * @param {ts.CompilerOptions} compilerOptions
+ * log and throw error diagnostics
+ * @param {string} tsconfig_file
+ * @param {string} phase
+ * @param {ts.Diagnostic[]} diagnostics
  */
-function unwrap_enums(compilerOptions) {
-	/** @type {Record<string,Record<number,string>>}*/
-	const enum_mappings = {
-		module: { ...ts.ModuleKind },
-		moduleResolution: {
-			...ts.ModuleResolutionKind,
-			2: 'node' //ensure it's using the old generic 'node' value instead of node10
-		},
-		target: {
-			...ts.ScriptTarget,
-			99: 'esnext' //ensure it's not using 'latest'
-		}
-	};
-	for (const [option, mapping] of Object.entries(enum_mappings)) {
-		if (
-			compilerOptions[option] != null &&
-			typeof compilerOptions[option] === 'number' &&
-			// @ts-expect-error dynamic access
-			mapping[compilerOptions[option]] != null
-		) {
-			// @ts-expect-error dynamic access
-			compilerOptions[option] = mapping[compilerOptions[option]];
-		}
+function report_ts_errors(tsconfig_file,phase, diagnostics) {
+	const errors = (diagnostics.filter(d => d.category === ts.DiagnosticCategory.Error))
+	if(errors.length > 0) {
+		const msg = `parsing ${tsconfig_file} failed: ${errors.length} error${errors.length > 1 ?'s' : ''} occurred during ${phase}`;
+		console.error(`${msg}\n`,ts.formatDiagnostics(diagnostics,{ getCurrentDirectory: ()=> ts.sys.getCurrentDirectory(), getCanonicalFileName: f => f, getNewLine: ()=>'\n'}))
+		throw new Error(msg)
 	}
 }

@@ -447,15 +447,15 @@ export function is_reference(node) {
  */
 export function parse_tsconfig(tsconfig_file) {
 	const { config, error: read_diagnostic } = ts.readConfigFile(tsconfig_file, ts.sys.readFile);
-	if(read_diagnostic != null) {
-		report_ts_errors(tsconfig_file,'readConfigFile',[read_diagnostic]);
+	if (read_diagnostic != null) {
+		report_ts_errors(tsconfig_file, 'readConfigFile', [read_diagnostic]);
 	}
 	const {
 		raw,
 		options,
 		errors: parse_diagnostics
 	} = ts.parseJsonConfigFileContent(config, ts.sys, path.dirname(tsconfig_file));
-	report_ts_errors(tsconfig_file,'parseJsonConfigFileContent',parse_diagnostics);
+	report_ts_errors(tsconfig_file, 'parseJsonConfigFileContent', parse_diagnostics);
 	// only returns what's needed later on
 	return {
 		include: raw.include,
@@ -470,11 +470,20 @@ export function parse_tsconfig(tsconfig_file) {
  * @param {string} phase
  * @param {ts.Diagnostic[]} diagnostics
  */
-function report_ts_errors(tsconfig_file,phase, diagnostics) {
-	const errors = (diagnostics.filter(d => d.category === ts.DiagnosticCategory.Error))
-	if(errors.length > 0) {
-		const msg = `parsing ${tsconfig_file} failed: ${errors.length} error${errors.length > 1 ?'s' : ''} occurred during ${phase}`;
-		console.error(`${msg}\n`,ts.formatDiagnostics(diagnostics,{ getCurrentDirectory: ()=> ts.sys.getCurrentDirectory(), getCanonicalFileName: f => f, getNewLine: ()=>'\n'}))
-		throw new Error(msg)
+function report_ts_errors(tsconfig_file, phase, diagnostics) {
+	const errors = diagnostics.filter((d) => d.category === ts.DiagnosticCategory.Error);
+	if (errors.length > 0) {
+		const msg = `parsing ${tsconfig_file} failed: ${errors.length} error${
+			errors.length > 1 ? 's' : ''
+		} occurred during ${phase}`;
+		console.error(
+			`${msg}\n`,
+			ts.formatDiagnostics(diagnostics, {
+				getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
+				getCanonicalFileName: (f) => f,
+				getNewLine: () => '\n'
+			})
+		);
+		throw new Error(msg);
 	}
 }

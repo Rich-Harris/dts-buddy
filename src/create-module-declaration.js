@@ -52,6 +52,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		/**
 		 * @param {string} module
 		 * @param {string} name
+		 * @param {string} alias
 		 * @returns {import('./types').Declaration}
 		 */
 		const create_external_declaration = (module, name, alias) => {
@@ -79,7 +80,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			for (const [name, binding] of module.imports) {
 				if (binding.external) {
-					(external_imports[binding.id] ??= {})[binding.name] = create_external_declaration(
+					(external_imports[binding.id] ??= {})[binding.name] ??= create_external_declaration(
 						binding.id,
 						binding.name,
 						name
@@ -89,7 +90,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			for (const [name, binding] of module.import_all) {
 				if (binding.external) {
-					(external_import_alls[binding.id] ??= {})[binding.name] = create_external_declaration(
+					(external_import_alls[binding.id] ??= {})[binding.name] ??= create_external_declaration(
 						binding.id,
 						binding.name,
 						name
@@ -99,7 +100,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 			for (const [name, binding] of module.export_from) {
 				if (binding.external) {
-					(external_export_from[binding.id] ??= {})[binding.name] = create_external_declaration(
+					(external_export_from[binding.id] ??= {})[binding.name] ??= create_external_declaration(
 						binding.id,
 						binding.name,
 						name

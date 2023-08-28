@@ -1,14 +1,8 @@
 {
 	"version": 3,
 	"file": "index.d.ts",
-	"names": [
-		"C"
-	],
-	"sources": [
-		"../input/foo.d.ts"
-	],
-	"sourcesContent": [
-		null
-	],
-	"mappings": ";MAAYA,CAACA"
+	"names": [],
+	"sources": [],
+	"sourcesContent": [],
+	"mappings": ""
 }

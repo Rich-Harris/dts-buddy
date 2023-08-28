@@ -24,6 +24,7 @@ const program = sade('dts-buddy [bundle]', true)
 	.version(dts_buddy_pkg.version)
 	.option('--project, -p', 'The location of your TypeScript configuration', 'tsconfig.json')
 	.option('--module, -m', 'Each entry point, as <id>:<path> (can be used multiple times)')
+	.option('--debug', 'Directory to emit .d.ts files for debugging')
 	.action(async (output, opts) => {
 		if (!fs.existsSync('package.json')) {
 			exit('No package.json found');
@@ -74,7 +75,8 @@ const program = sade('dts-buddy [bundle]', true)
 		await createBundle({
 			output,
 			modules,
-			project: opts.project
+			project: opts.project,
+			debug: opts.debug
 		});
 
 		const relative = path.relative(process.cwd(), output);

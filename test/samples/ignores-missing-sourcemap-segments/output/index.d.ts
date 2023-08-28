@@ -1,4 +1,4 @@
-declare module 'todo-rename-this-test' {
+declare module 'ignores-missing-sourcemap-segments' {
 	export function hello(): void;
 	export namespace object {
 		const answer: number;

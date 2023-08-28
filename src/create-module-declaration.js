@@ -52,16 +52,18 @@ export function create_module_declaration(id, entry, created, resolve) {
 		/**
 		 * @param {string} module
 		 * @param {string} name
+		 * @param {string} alias
 		 * @returns {import('./types').Declaration}
 		 */
-		const create_external_declaration = (module, name) => {
+		const create_external_declaration = (module, name, alias) => {
 			return {
 				module,
 				name,
 				alias: '',
 				external: true,
 				included: false,
-				dependencies: []
+				dependencies: [],
+				preferred_alias: alias
 			};
 		};
 
@@ -76,29 +78,32 @@ export function create_module_declaration(id, entry, created, resolve) {
 				ambient.push(dep);
 			}
 
-			for (const binding of module.imports.values()) {
+			for (const [name, binding] of module.imports) {
 				if (binding.external) {
-					(external_imports[binding.id] ??= {})[binding.name] = create_external_declaration(
+					(external_imports[binding.id] ??= {})[binding.name] ??= create_external_declaration(
 						binding.id,
-						binding.name
+						binding.name,
+						name
 					);
 				}
 			}
 
-			for (const binding of module.import_all.values()) {
+			for (const [name, binding] of module.import_all) {
 				if (binding.external) {
-					(external_import_alls[binding.id] ??= {})[binding.name] = create_external_declaration(
+					(external_import_alls[binding.id] ??= {})[binding.name] ??= create_external_declaration(
 						binding.id,
-						binding.name
+						binding.name,
+						name
 					);
 				}
 			}
 
-			for (const binding of module.export_from.values()) {
+			for (const [name, binding] of module.export_from) {
 				if (binding.external) {
-					(external_export_from[binding.id] ??= {})[binding.name] = create_external_declaration(
+					(external_export_from[binding.id] ??= {})[binding.name] ??= create_external_declaration(
 						binding.id,
-						binding.name
+						binding.name,
+						name
 					);
 				}
 			}
@@ -181,7 +186,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		// provide a name for declarations that are included but not exported
 		for (const declaration of declarations) {
 			if (!declaration.alias) {
-				declaration.alias = get_name(declaration.name);
+				declaration.alias = get_name(declaration.preferred_alias || declaration.name);
 			}
 		}
 	}
@@ -405,12 +410,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration?.external) {
-				const specifier =
-					declaration.alias === declaration.name
-						? declaration.name
-						: `${declaration.name} as ${declaration.alias}`;
-
-				specifiers.push(specifier);
+				specifiers.push(declaration.alias);
 			}
 		}
 
@@ -509,7 +509,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 				included: true,
 				name,
 				alias: name,
-				dependencies: []
+				dependencies: [],
+				preferred_alias: ''
 			};
 		} else {
 			throw new Error('TODO external imports');

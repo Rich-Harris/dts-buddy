@@ -14,6 +14,7 @@ interface Declaration {
 	external: boolean;
 	included: boolean;
 	dependencies: Reference[];
+	preferred_alias: string;
 }
 
 interface Binding {

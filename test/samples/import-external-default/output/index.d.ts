@@ -1,4 +1,4 @@
-declare module 'import-default-from-external' {
+declare module 'import-external-default' {
 	import type { default as x } from 'external';
 	export function foo(input: x): x;
 }

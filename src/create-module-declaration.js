@@ -139,6 +139,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 		/** @type {Set<string>} */
 		const names = new Set();
 
+		/** @type {Set<import('./types').Declaration>} */
+		const declarations = new Set();
+
 		/** @param {string} name */
 		function get_name(name) {
 			let i = 1;
@@ -152,26 +155,33 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 		/**
 		 * @param {import('./types').Declaration} declaration
-		 * @param {string} [name]
 		 */
-		const mark = (declaration, name) => {
-			if (!declaration.included) {
-				declaration.alias = get_name(name ?? declaration.name);
-				declaration.included = true;
+		const mark = (declaration) => {
+			if (declaration.included) return;
 
-				for (const { module, name } of declaration.dependencies) {
-					const dependency = trace(module, name);
-					mark(dependency);
-				}
+			declarations.add(declaration);
+			declaration.included = true;
+
+			for (const { module, name } of declaration.dependencies) {
+				const dependency = trace(module, name);
+				mark(dependency);
 			}
 		};
 
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration) {
-				mark(declaration, name);
+				declaration.alias = get_name(name);
+				mark(declaration);
 			} else {
 				throw new Error('Something strange happened');
+			}
+		}
+
+		// provide a name for declarations that are included but not exported
+		for (const declaration of declarations) {
+			if (!declaration.alias) {
+				declaration.alias = get_name(declaration.name);
 			}
 		}
 	}

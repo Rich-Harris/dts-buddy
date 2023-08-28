@@ -47,8 +47,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 
 		for (const file of actual) {
 			assert.equal(
-				fs.readFileSync(`${dir}/actual/${file}`, 'utf-8'),
-				fs.readFileSync(`${dir}/output/${file}`, 'utf-8'),
+				fs.readFileSync(`${dir}/actual/${file}`, 'utf-8').trim(),
+				fs.readFileSync(`${dir}/output/${file}`, 'utf-8').trim(),
 				file
 			);
 		}

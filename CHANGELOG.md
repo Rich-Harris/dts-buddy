@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.2.4
+
+- Rename external imports as necessary ([#54](https://github.com/Rich-Harris/dts-buddy/pull/54))
+
 ## 0.2.3
 
 - Ignore missing sourcemap segments ([#51](https://github.com/Rich-Harris/dts-buddy/pull/51))

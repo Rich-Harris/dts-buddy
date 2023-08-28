@@ -1,6 +1,6 @@
-declare module 'import-from-external' {
-	import type { foo } from 'external';
-	export { foo };
+declare module 'import-external-named-as' {
+	import type { foo as f } from 'external';
+	export { f };
 }
 
 //# sourceMappingURL=index.d.ts.map

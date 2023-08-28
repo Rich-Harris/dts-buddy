@@ -3,3 +3,4 @@
 /test/samples/*/actual
 /test/samples/*/debug
 /types
+/debug

@@ -283,7 +283,8 @@ export function get_dts(file, created, resolve) {
 				alias: '',
 				included: false,
 				external: false,
-				dependencies: []
+				dependencies: [],
+				preferred_alias: ''
 			};
 
 			module.declarations.set(name, declaration);

@@ -186,7 +186,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		// provide a name for declarations that are included but not exported
 		for (const declaration of declarations) {
 			if (!declaration.alias) {
-				declaration.alias = get_name(declaration.preferred_alias ?? declaration.name);
+				declaration.alias = get_name(declaration.preferred_alias || declaration.name);
 			}
 		}
 	}

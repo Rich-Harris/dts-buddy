@@ -509,7 +509,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 				included: true,
 				name,
 				alias: name,
-				dependencies: []
+				dependencies: [],
+				preferred_alias: ''
 			};
 		} else {
 			throw new Error('TODO external imports');

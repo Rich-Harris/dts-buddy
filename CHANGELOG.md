@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.2.2
+
+- Correctly re-export declarations regardless of inclusion order ([#49](https://github.com/Rich-Harris/dts-buddy/pull/49))
+
 ## 0.2.1
 
 - Include all project files by default ([#48](https://github.com/Rich-Harris/dts-buddy/pull/48))

@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.2.1
+
+- Include all project files by default ([#48](https://github.com/Rich-Harris/dts-buddy/pull/48))
+
 ## 0.2.0
 
 - Use TypeScript to parse config, rather than `eval` ([#36](https://github.com/Rich-Harris/dts-buddy/pull/36))

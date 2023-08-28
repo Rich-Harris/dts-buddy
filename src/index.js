@@ -43,8 +43,8 @@ export async function createBundle(options) {
 
 	const input = get_input_files(
 		cwd,
-		options.include ?? tsconfig.include,
-		options.exclude ?? tsconfig.exclude
+		options.include ?? tsconfig.include ?? ['**'],
+		options.exclude ?? tsconfig.exclude ?? []
 	);
 
 	const original_cwd = process.cwd();

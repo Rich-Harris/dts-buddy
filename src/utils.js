@@ -80,11 +80,11 @@ export function clean_jsdoc(node, code) {
 
 /**
  * @param {string} cwd
- * @param {string[]} [include]
- * @param {string[]} [exclude]
+ * @param {string[]} include
+ * @param {string[]} exclude
  * @returns {string[]}
  */
-export function get_input_files(cwd, include = [], exclude = []) {
+export function get_input_files(cwd, include, exclude) {
 	/** @type {Set<string>} */
 	const included = new Set();
 

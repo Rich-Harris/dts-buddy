@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.2.0
+
+- Use TypeScript to parse config, rather than `eval` ([#36](https://github.com/Rich-Harris/dts-buddy/pull/36))
+
 ## 0.1.14
 
 - Improve error message when encountering unknown node types ([#39](https://github.com/Rich-Harris/dts-buddy/pull/39))

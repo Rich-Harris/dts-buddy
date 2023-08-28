@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.2.3
+
+- Ignore missing sourcemap segments ([#51](https://github.com/Rich-Harris/dts-buddy/pull/51))
+
 ## 0.2.2
 
 - Correctly re-export declarations regardless of inclusion order ([#49](https://github.com/Rich-Harris/dts-buddy/pull/49))

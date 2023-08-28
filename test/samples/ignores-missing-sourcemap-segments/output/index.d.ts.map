@@ -1,0 +1,17 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"hello",
+		"object"
+	],
+	"sources": [
+		"../input/index.js",
+		"../input/index.d.ts"
+	],
+	"sourcesContent": [
+		null,
+		null
+	],
+	"mappings": ";iBAIgBA,KAAKA;kBCHJC,MAAMA"
+}

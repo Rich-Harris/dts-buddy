@@ -8,6 +8,7 @@ const filter = process.argv[2];
 
 for (const sample of fs.readdirSync('test/samples')) {
 	if (filter && !sample.includes(filter)) continue;
+	if (sample.startsWith('.')) continue;
 
 	test(sample, async () => {
 		const dir = `test/samples/${sample}`;

@@ -354,6 +354,8 @@ export function get_dts(file, created, resolve) {
 
 		if (tsu.isEndOfFileToken(node)) return;
 
+		if (ts.isEnumDeclaration(node)) return;
+
 		throw new Error(`Unimplemented node type ${ts.SyntaxKind[node.kind]}`);
 	}
 
@@ -391,6 +393,7 @@ export function walk(node, callback) {
  *   ts.ClassDeclaration |
  *   ts.FunctionDeclaration |
  *   ts.VariableStatement |
+ *   ts.EnumDeclaration |
  *   ts.ModuleDeclaration
  * }
  */
@@ -401,6 +404,7 @@ export function is_declaration(node) {
 		ts.isClassDeclaration(node) ||
 		ts.isFunctionDeclaration(node) ||
 		ts.isVariableStatement(node) ||
+		ts.isEnumDeclaration(node) ||
 		!!(ts.isModuleDeclaration(node) && node.flags & 16)
 	);
 }

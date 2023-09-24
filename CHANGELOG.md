@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.2.5
+
+- Handle enum declarations ([#57](https://github.com/Rich-Harris/dts-buddy/pull/57))
+
 ## 0.2.4
 
 - Rename external imports as necessary ([#54](https://github.com/Rich-Harris/dts-buddy/pull/54))

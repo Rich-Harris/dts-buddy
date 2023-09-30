@@ -35,9 +35,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [ 18 ]
-        os: [ ubuntu-latest ]
-        typescript: ['5.0','5.1','5.2']
+        node: [18]
+        os: [ubuntu-latest]
+        typescript: ['5.0', '5.1', '5.2']
         include:
           - node: 18
             os: windows-latest

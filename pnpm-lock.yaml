@@ -40,6 +40,9 @@ devDependencies:
   '@types/node':
     specifier: ^20.7.2
     version: 20.8.6
+  '@types/semver':
+    specifier: ^7.5.3
+    version: 7.5.3
   prettier:
     specifier: ^3.0.3
     version: 3.0.3
@@ -100,6 +103,10 @@ packages:
     resolution: {integrity: sha512-eWO4K2Ji70QzKUqRy6oyJWUeB7+g2cRagT3T/nxYibYcT4y2BDL8lqolRXjTHmkZCdJfIPaY73KbJAZmcryxTQ==}
     dependencies:
       undici-types: 5.25.3
+    dev: true
+
+  /@types/semver@7.5.3:
+    resolution: {integrity: sha512-OxepLK9EuNEIPxWNME+C6WwbRAOOI2o2BaQEGzz5Lu2e4Z5eDnEo+/aVEDMIXywoJitJ7xWd641wrGLZdtwRyw==}
     dev: true
 
   /dequal@2.0.3:

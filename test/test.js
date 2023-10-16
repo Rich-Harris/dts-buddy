@@ -3,6 +3,8 @@ import glob from 'tiny-glob/sync.js';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { createBundle } from '../src/index.js';
+import * as semver from 'semver';
+import ts from 'typescript';
 
 const filter = process.argv[2];
 
@@ -41,15 +43,26 @@ for (const sample of fs.readdirSync('test/samples')) {
 			compilerOptions
 		});
 
+		let output_dir = 'output';
+		for (const candidate of fs.readdirSync(dir)) {
+			if (!candidate.startsWith('output ')) continue;
+			const range = candidate.slice(7);
+
+			if (semver.satisfies(ts.version, range)) {
+				output_dir = candidate;
+				break;
+			}
+		}
+
 		const actual = glob('**', { cwd: `${dir}/actual`, filesOnly: true }).sort();
-		const output = glob('**', { cwd: `${dir}/output`, filesOnly: true }).sort();
+		const output = glob('**', { cwd: `${dir}/${output_dir}`, filesOnly: true }).sort();
 
 		assert.equal(actual, output);
 
 		for (const file of actual) {
 			assert.equal(
 				fs.readFileSync(`${dir}/actual/${file}`, 'utf-8').trim(),
-				fs.readFileSync(`${dir}/output/${file}`, 'utf-8').trim(),
+				fs.readFileSync(`${dir}/${output_dir}/${file}`, 'utf-8').trim(),
 				file
 			);
 		}

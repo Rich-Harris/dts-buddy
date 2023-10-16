@@ -1,6 +1,6 @@
 declare module 'const-namespace' {
 	export namespace a {
-		let x: number;
+		const x: number;
 	}
 }
 

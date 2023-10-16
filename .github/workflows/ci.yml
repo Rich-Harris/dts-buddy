@@ -12,32 +12,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Tests:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - node-version: 16
-            os: [ubuntu-latest]
-          - node-version: 16
-            os: windows-latest
+  Checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.2.2
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: lint
-        if: ${{ !cancelled() }} # allows checks to run if one fails so we can put them all in the same job
         run: pnpm lint
       - name: check
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() }} # allows checks to run if one fails so we can put them all in the same job
         run: pnpm check
+  Tests:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18]
+        os: [ubuntu-latest]
+        typescript: ['5.0', '5.1', '5.2']
+        include:
+          - node: 18
+            os: windows-latest
+            typescript: '5.2'
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2.2.2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm update typescript@~${{ matrix.typescript }}
       - name: test
-        if: ${{ !cancelled() }}
         run: pnpm test

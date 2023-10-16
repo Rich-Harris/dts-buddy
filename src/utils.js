@@ -405,7 +405,7 @@ export function is_declaration(node) {
 		ts.isFunctionDeclaration(node) ||
 		ts.isVariableStatement(node) ||
 		ts.isEnumDeclaration(node) ||
-		!!(ts.isModuleDeclaration(node) && node.flags & 16)
+		!!(ts.isModuleDeclaration(node) && node.flags & ts.NodeFlags.Namespace)
 	);
 }
 

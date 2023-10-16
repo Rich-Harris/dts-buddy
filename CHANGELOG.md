@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.3.0
+
+- Make `typescript` a peer dependency ([#58](https://github.com/Rich-Harris/dts-buddy/pull/58))
+
 ## 0.2.5
 
 - Handle enum declarations ([#57](https://github.com/Rich-Harris/dts-buddy/pull/57))

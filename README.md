@@ -96,6 +96,24 @@ await createBundle({
 
 Note that the result will also be treeshaken — your .d.ts bundle will only include public types.
 
+## Any other benefits over using `tsc`?
+
+In large codebases, it's convenient to use the `"paths"` option in your `tsconfig.json` so that you can do things like this...
+
+```js
+/** @type {import('#types').Thing} */
+let thing = { ... };
+```
+
+...instead of this:
+
+```js
+/** @type {import('../../../../../types.d.ts').Thing} */
+let thing = { ... };
+```
+
+Unfortunately, `tsc` ignores `"paths"` when emitting declaration files ([docs](https://www.typescriptlang.org/tsconfig/#paths)), which breaks stuff. `dts-buddy` fixes it.
+
 ## License
 
 MIT

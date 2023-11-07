@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.4.0
+
+- Replace path aliases ([#65](https://github.com/Rich-Harris/dts-buddy/pull/65))
+
 ## 0.3.0
 
 - Make `typescript` a peer dependency ([#58](https://github.com/Rich-Harris/dts-buddy/pull/58))

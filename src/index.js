@@ -51,10 +51,15 @@ export async function createBundle(options) {
 	process.chdir(cwd);
 
 	try {
+		const baseUrl =
+			tsconfig.compilerOptions?.baseUrl ??
+			path.resolve(original_cwd, options.compilerOptions?.baseUrl ?? '.');
+
 		/** @type {ts.CompilerOptions} */
 		const compilerOptions = {
 			...tsconfig.compilerOptions,
 			...options.compilerOptions,
+			baseUrl,
 			allowJs: true,
 			checkJs: true,
 			declaration: true,
@@ -70,6 +75,10 @@ export async function createBundle(options) {
 				...options.compilerOptions?.paths
 			}
 		};
+
+		for (const key in compilerOptions.paths) {
+			compilerOptions.paths[key] = compilerOptions.paths[key].map((p) => path.resolve(baseUrl, p));
+		}
 
 		/** @type {Record<string, string>} */
 		const created = {};

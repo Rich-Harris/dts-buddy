@@ -52,8 +52,9 @@ export async function createBundle(options) {
 
 	try {
 		const baseUrl =
-			tsconfig.compilerOptions?.baseUrl ??
-			path.resolve(original_cwd, options.compilerOptions?.baseUrl ?? '.');
+			tsconfig.compilerOptions?.baseUrl ?? options.compilerOptions?.baseUrl
+				? path.resolve(original_cwd, options.compilerOptions?.baseUrl ?? '.')
+				: cwd;
 
 		/** @type {ts.CompilerOptions} */
 		const compilerOptions = {

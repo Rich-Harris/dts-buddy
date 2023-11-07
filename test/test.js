@@ -34,6 +34,9 @@ for (const sample of fs.readdirSync('test/samples')) {
 			}
 		}
 
+		fs.rmSync(`${dir}/actual`, { recursive: true, force: true });
+		fs.rmSync(`${dir}/debug`, { recursive: true, force: true });
+
 		await createBundle({
 			project: 'test/tsconfig.json',
 			modules,

@@ -7,6 +7,7 @@ import { SourceMapGenerator } from '@jridgewell/source-map';
 import {
 	clean_jsdoc,
 	get_input_files,
+	get_jsdoc,
 	is_declaration,
 	parse_tsconfig,
 	resolve_dts,
@@ -51,10 +52,21 @@ export async function createBundle(options) {
 	process.chdir(cwd);
 
 	try {
+		const baseUrl =
+			tsconfig.compilerOptions?.baseUrl ?? options.compilerOptions?.baseUrl
+				? path.resolve(original_cwd, options.compilerOptions?.baseUrl ?? '.')
+				: cwd;
+
+		const paths = {
+			...tsconfig.compilerOptions?.paths,
+			...options.compilerOptions?.paths
+		};
+
 		/** @type {ts.CompilerOptions} */
 		const compilerOptions = {
 			...tsconfig.compilerOptions,
 			...options.compilerOptions,
+			baseUrl,
 			allowJs: true,
 			checkJs: true,
 			declaration: true,
@@ -64,13 +76,113 @@ export async function createBundle(options) {
 			lib: undefined,
 			noEmit: false,
 			noEmitOnError: false,
-			outDir: undefined
+			outDir: undefined,
+			paths
 		};
+
+		for (const key in paths) {
+			paths[key] = paths[key].map((p) => path.resolve(baseUrl, p));
+		}
+
+		// if `compilerOptions.paths` is used, we need to update the source before TypeScript sees it,
+		// otherwise the unresolved aliases will be present in the output
+		const paths_to_replace = Object.keys(paths).filter((key) => !(key in modules));
+
+		const paths_regex = new RegExp(
+			`(['"])(${paths_to_replace
+				.map((path) => path.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&').replace(/\*/g, '(.+)'))
+				.join('|')})\\1`
+		);
 
 		/** @type {Record<string, string>} */
 		const created = {};
 		const host = ts.createCompilerHost(compilerOptions);
 		host.writeFile = (file, contents) => (created[file.replace(/\//g, path.sep)] = contents);
+		host.readFile = (file) => {
+			file = file.replace(/\//g, path.sep);
+
+			const contents = fs.readFileSync(file, 'utf-8');
+
+			if (!input.includes(file)) return contents;
+			if (!paths_regex.test(contents)) return contents;
+
+			const code = new MagicString(contents);
+			const ast = ts.createSourceFile(
+				file,
+				contents,
+				ts.ScriptTarget.Latest,
+				false,
+				ts.ScriptKind.TS
+			);
+
+			/** @param {import('typescript').Node} node */
+			function replace_path(node) {
+				const imported = node.getText(ast);
+				const match = paths_regex.exec(imported);
+
+				if (!match) return;
+
+				const replacements = paths[match[2]];
+				const substitution = match[3];
+
+				/** @type {string | null} */
+				let replacement = null;
+
+				for (const candidate of replacements) {
+					const substituted = candidate.replace('*', substitution);
+
+					if (input.includes(substituted)) {
+						replacement = substituted;
+						break;
+					}
+
+					const extensionless = substituted.replace(/\.((d\.)?ts|js)$/, '');
+					for (const extension of ['.d.ts', '.ts', '.js']) {
+						if (input.includes(extensionless + extension)) {
+							replacement = extensionless + extension;
+							break;
+						}
+					}
+				}
+
+				if (replacement) {
+					let relative = path.relative(path.dirname(file), replacement);
+					if (relative[0] !== '.') relative = `./${relative}`;
+
+					code.overwrite(node.pos, node.end, `${match[1]}${relative}${match[1]}`);
+				}
+			}
+
+			ts.forEachChild(ast, (node) => {
+				walk(node, (node) => {
+					if (ts.isImportDeclaration(node)) {
+						replace_path(node.moduleSpecifier);
+					}
+
+					if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
+						replace_path(node.moduleSpecifier);
+					}
+
+					const jsdoc = get_jsdoc(node);
+					for (const comment of jsdoc ?? []) {
+						for (const tag of comment.tags ?? []) {
+							// @ts-expect-error
+							if (tag.typeExpression) {
+								// @ts-expect-error
+								const type = tag.typeExpression.type;
+								walk(type, (node) => {
+									if (ts.isImportTypeNode(node)) {
+										replace_path(node.argument);
+									}
+								});
+							}
+						}
+					}
+				});
+			});
+
+			return code.toString();
+		};
 
 		const program = ts.createProgram(input, compilerOptions, host);
 		program.emit();

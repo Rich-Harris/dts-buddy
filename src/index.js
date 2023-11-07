@@ -99,6 +99,8 @@ export async function createBundle(options) {
 		const host = ts.createCompilerHost(compilerOptions);
 		host.writeFile = (file, contents) => (created[file.replace(/\//g, path.sep)] = contents);
 		host.readFile = (file) => {
+			file = file.replace(/\//g, path.sep);
+
 			const contents = fs.readFileSync(file, 'utf-8');
 
 			if (!input.includes(file)) return contents;

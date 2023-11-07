@@ -164,7 +164,9 @@ export async function createBundle(options) {
 					const jsdoc = get_jsdoc(node);
 					for (const comment of jsdoc ?? []) {
 						for (const tag of comment.tags ?? []) {
+							// @ts-expect-error
 							if (tag.typeExpression) {
+								// @ts-expect-error
 								const type = tag.typeExpression.type;
 								walk(type, (node) => {
 									if (ts.isImportTypeNode(node)) {

@@ -8,7 +8,7 @@
 	],
 	"sources": [
 		"../input/index.js",
-		"../lib.d.ts"
+		"../input/lib.d.ts"
 	],
 	"sourcesContent": [
 		null,

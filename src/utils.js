@@ -10,7 +10,7 @@ import { decode } from '@jridgewell/sourcemap-codec';
 const preserved_jsdoc_tags = new Set(['default', 'deprecated', 'example']);
 
 /** @param {ts.Node} node */
-function get_jsdoc(node) {
+export function get_jsdoc(node) {
 	const { jsDoc } = /** @type {{ jsDoc?: ts.JSDoc[] }} */ (/** @type {*} */ (node));
 	return jsDoc;
 }

@@ -64,7 +64,11 @@ export async function createBundle(options) {
 			lib: undefined,
 			noEmit: false,
 			noEmitOnError: false,
-			outDir: undefined
+			outDir: undefined,
+			paths: {
+				...tsconfig.compilerOptions?.paths,
+				...options.compilerOptions?.paths
+			}
 		};
 
 		/** @type {Record<string, string>} */

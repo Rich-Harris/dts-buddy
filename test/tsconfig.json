@@ -8,6 +8,9 @@
 		"emitDeclarationOnly": true,
 		"module": "esnext",
 		"target": "esnext",
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"paths": {
+			"#lib":["samples/path-config/lib.d.ts"]
+		}
 	}
 }

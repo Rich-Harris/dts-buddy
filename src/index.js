@@ -7,7 +7,7 @@ import { SourceMapGenerator } from '@jridgewell/source-map';
 import {
 	clean_jsdoc,
 	get_input_files,
-	get_jsdoc,
+	get_jsdoc_imports,
 	is_declaration,
 	parse_tsconfig,
 	resolve_dts,
@@ -163,20 +163,8 @@ export async function createBundle(options) {
 						replace_path(node.moduleSpecifier);
 					}
 
-					const jsdoc = get_jsdoc(node);
-					for (const comment of jsdoc ?? []) {
-						for (const tag of comment.tags ?? []) {
-							// @ts-expect-error
-							if (tag.typeExpression) {
-								// @ts-expect-error
-								const type = tag.typeExpression.type;
-								walk(type, (node) => {
-									if (ts.isImportTypeNode(node)) {
-										replace_path(node.argument);
-									}
-								});
-							}
-						}
+					for (const source of get_jsdoc_imports(node)) {
+						replace_path(source);
 					}
 				});
 			});

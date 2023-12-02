@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.4.1
+
+- Support TypeScript 5.3 ([#67](https://github.com/Rich-Harris/dts-buddy/pull/67))
+
 ## 0.4.0
 
 - Replace path aliases ([#65](https://github.com/Rich-Harris/dts-buddy/pull/65))

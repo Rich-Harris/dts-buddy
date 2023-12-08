@@ -23,20 +23,47 @@ export function get_jsdoc_imports(node) {
 	const jsdoc = get_jsdoc(node);
 	for (const comment of jsdoc ?? []) {
 		for (const tag of comment.tags ?? []) {
-			// @ts-expect-error
-			if (tag.typeExpression) {
-				// @ts-expect-error
-				const type = tag.typeExpression.type;
-				walk(type, (node) => {
-					if (ts.isImportTypeNode(node)) {
-						imports.push(node.argument);
-					}
-				});
-			}
+			collect_jsdoc_imports(tag, imports);
 		}
 	}
 
 	return imports;
+}
+
+/**
+ *
+ * @param {ts.JSDocTag} node
+ * @param {ts.TypeNode[]} imports
+ */
+function collect_jsdoc_imports(node, imports) {
+	const type_expression = /** @type {ts.JSDocTag & { typeExpression?: ts.Node}} */ (node)
+		.typeExpression;
+
+	if (type_expression) {
+		/**
+		 * @type {ts.JSDocTag[]}
+		 */
+		const sub_tags = [];
+
+		if (ts.isJSDocTypeLiteral(type_expression)) {
+			sub_tags.push(...(type_expression.jsDocPropertyTags ?? []));
+		} else if (ts.isJSDocSignature(type_expression)) {
+			sub_tags.push(...type_expression.parameters, ...(type_expression.typeParameters ?? []));
+			if (type_expression.type) {
+				sub_tags.push(type_expression.type);
+			}
+		} else if (ts.isJSDocTypeExpression(type_expression)) {
+			walk(type_expression.type, (node) => {
+				if (ts.isImportTypeNode(node)) {
+					imports.push(node.argument);
+				}
+			});
+		}
+
+		for (const sub_tag of sub_tags) {
+			collect_jsdoc_imports(sub_tag, imports);
+		}
+	}
 }
 
 /**

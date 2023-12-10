@@ -1,3 +1,3 @@
 # extra ignores for prettier
-test/samples/*/output
+test/samples/*/output*
 pnpm-lock.yaml

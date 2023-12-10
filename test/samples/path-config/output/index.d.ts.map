@@ -3,6 +3,8 @@
 	"file": "index.d.ts",
 	"names": [
 		"foo",
+		"overload",
+		"foo2",
 		"Input",
 		"Output"
 	],
@@ -14,5 +16,5 @@
 		null,
 		null
 	],
-	"mappings": ";iBAIgBA,GAAGA;MCJPC,KAAKA;MACLC,MAAMA"
+	"mappings": ";iBAIgBA,GAAGA;;iBASfC,QAAQA;;iBAARA,QAAQA;;iBAgBIC,IAAIA;;;;MC7BRC,KAAKA;MACLC,MAAMA"
 }

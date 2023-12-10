@@ -1,5 +1,10 @@
 # dts-buddy changelog
 
+## 0.4.2
+
+- Support path rewriting in `typedef`, `overload` and `callback` tags ([#68](https://github.com/Rich-Harris/dts-buddy/pull/68))
+- Preserve type expressions in JSDoc annotations ([#69](https://github.com/Rich-Harris/dts-buddy/pull/69))
+
 ## 0.4.1
 
 - Support TypeScript 5.3 ([#67](https://github.com/Rich-Harris/dts-buddy/pull/67))

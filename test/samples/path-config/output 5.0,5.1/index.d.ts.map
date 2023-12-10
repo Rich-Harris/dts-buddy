@@ -1,0 +1,20 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"foo",
+		"overload",
+		"foo2",
+		"Input",
+		"Output"
+	],
+	"sources": [
+		"../input/index.js",
+		"../input/lib.d.ts"
+	],
+	"sourcesContent": [
+		null,
+		null
+	],
+	"mappings": ";iBAIgBA,GAAGA;iBASfC,QAAQA;iBAARA,QAAQA;;iBAgBIC,IAAIA;;;;MC7BRC,KAAKA;MACLC,MAAMA"
+}

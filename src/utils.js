@@ -75,18 +75,20 @@ export function clean_jsdoc(node, code) {
 				if (tag.comment) {
 					should_keep = true;
 
-					const typeExpression = /** @type {ts.JSDocTypeExpression | undefined} */ (
-						// @ts-ignore
-						tag.typeExpression
-					);
+					if (type === 'param' || type === 'returns') {
+						const typeExpression = /** @type {ts.JSDocTypeExpression | undefined} */ (
+							// @ts-ignore
+							tag.typeExpression
+						);
 
-					if (typeExpression) {
-						// turn `@param {string} foo description` into `@param foo description`
-						let a = typeExpression.pos;
-						let b = typeExpression.end;
+						if (typeExpression) {
+							// turn `@param {string} foo description` into `@param foo description`
+							let a = typeExpression.pos;
+							let b = typeExpression.end;
 
-						while (code.original[b] === ' ') b += 1;
-						code.remove(a, b);
+							while (code.original[b] === ' ') b += 1;
+							code.remove(a, b);
+						}
 					}
 				} else if (preserved_jsdoc_tags.has(type)) {
 					should_keep = true;

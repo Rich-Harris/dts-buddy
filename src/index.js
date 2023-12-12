@@ -146,7 +146,7 @@ export async function createBundle(options) {
 				}
 
 				if (replacement) {
-					let relative = path.relative(path.dirname(file), replacement);
+					let relative = path.relative(path.dirname(file), replacement).replaceAll('\\', '/');
 					if (relative[0] !== '.') relative = `./${relative}`;
 
 					code.overwrite(node.pos, node.end, `${match[1]}${relative}${match[1]}`);

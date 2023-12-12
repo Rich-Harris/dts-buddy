@@ -6,15 +6,18 @@
 		"overload",
 		"foo2",
 		"Input",
-		"Output"
+		"Output",
+		"foo_nested"
 	],
 	"sources": [
 		"../input/index.js",
-		"../input/lib.d.ts"
+		"../input/lib.d.ts",
+		"../input/nested/file.js"
 	],
 	"sourcesContent": [
 		null,
+		null,
 		null
 	],
-	"mappings": ";iBAIgBA,GAAGA;iBASfC,QAAQA;iBAARA,QAAQA;;iBAgBIC,IAAIA;;;;MC7BRC,KAAKA;MACLC,MAAMA"
+	"mappings": ";iBAMgBA,GAAGA;iBASfC,QAAQA;iBAARA,QAAQA;;iBAgBIC,IAAIA;;;;MC/BRC,KAAKA;MACLC,MAAMA;iBCGFC,UAAUA"
 }

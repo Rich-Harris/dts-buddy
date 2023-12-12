@@ -1,3 +1,5 @@
+export { foo_nested } from './nested/file.js';
+
 /**
  * @param {import('#lib').Input} input
  * @returns {import('#lib').Output}

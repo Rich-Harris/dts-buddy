@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.4.3
+
+- Fix path resolution on Windows ([#71](https://github.com/Rich-Harris/dts-buddy/pull/71))
+
 ## 0.4.2
 
 - Support path rewriting in `typedef`, `overload` and `callback` tags ([#68](https://github.com/Rich-Harris/dts-buddy/pull/68))

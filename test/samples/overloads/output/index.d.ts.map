@@ -1,0 +1,14 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"baz"
+	],
+	"sources": [
+		"../input/index.ts"
+	],
+	"sourcesContent": [
+		null
+	],
+	"mappings": ";;;;;iBAIgBA,GAAGA;iBAAHA,GAAGA"
+}

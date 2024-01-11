@@ -329,18 +329,23 @@ export function get_dts(file, created, resolve) {
 
 			const name = identifier.getText(module.ast);
 
-			/** @type {import('./types').Declaration} */
-			const declaration = {
-				module: file,
-				name,
-				alias: '',
-				included: false,
-				external: false,
-				dependencies: [],
-				preferred_alias: ''
-			};
+			// in the case of overloads, declaration may already exist
+			const existing = module.declarations.get(name);
+			if (!existing) {
+				module.declarations.set(name, {
+					module: file,
+					name,
+					alias: '',
+					included: false,
+					external: false,
+					dependencies: [],
+					preferred_alias: ''
+				});
+			}
 
-			module.declarations.set(name, declaration);
+			const declaration = /** @type {import('./types').Declaration} */ (
+				module.declarations.get(name)
+			);
 
 			const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
 

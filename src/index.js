@@ -218,9 +218,7 @@ export async function createBundle(options) {
 			// resolve relative imports and aliases (from tsconfig.paths)
 			return specifier.startsWith('.')
 				? resolve_dts(path.dirname(file), specifier)
-				: compilerOptions.paths && specifier in compilerOptions.paths
-				? resolve_dts(cwd, compilerOptions.paths[specifier][0])
-				: null;
+				: compilerOptions.paths?.[specifier]?.[0] ?? null;
 		}
 
 		for (const id in modules) {

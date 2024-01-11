@@ -1,5 +1,11 @@
 # dts-buddy changelog
 
+## 0.4.4
+
+- Handle `.jsx` and `.tsx` ([#72](https://github.com/Rich-Harris/dts-buddy/pull/72))
+- Allow `paths` to be nulled out ([#73](https://github.com/Rich-Harris/dts-buddy/pull/73))
+- Handle overloads ([#74](https://github.com/Rich-Harris/dts-buddy/pull/74))
+
 ## 0.4.3
 
 - Fix path resolution on Windows ([#71](https://github.com/Rich-Harris/dts-buddy/pull/71))

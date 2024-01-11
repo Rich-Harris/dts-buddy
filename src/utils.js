@@ -426,6 +426,8 @@ export function resolve_dts(from, to) {
 	if (file.endsWith('.d.ts')) return file;
 	if (file.endsWith('.ts')) return file.replace(/\.ts$/, '.d.ts');
 	if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
+	if (file.endsWith('.jsx')) return file.replace(/\.jsx$/, '.d.ts');
+	if (file.endsWith('.tsx')) return file.replace(/\.tsx$/, '.d.ts');
 	return file + '.d.ts';
 }
 

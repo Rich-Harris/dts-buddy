@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.4.5
+
+- Support TypeScript 5.4 ([#76](https://github.com/Rich-Harris/dts-buddy/pull/76))
+
 ## 0.4.4
 
 - Handle `.jsx` and `.tsx` ([#72](https://github.com/Rich-Harris/dts-buddy/pull/72))

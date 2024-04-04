@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.4.6
+
+- Handle namespaces ([#77](https://github.com/Rich-Harris/dts-buddy/pull/77))
+
 ## 0.4.5
 
 - Support TypeScript 5.4 ([#76](https://github.com/Rich-Harris/dts-buddy/pull/76))

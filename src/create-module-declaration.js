@@ -245,6 +245,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 				// remove `declare module 'foo'`
 				if (
 					ts.isModuleDeclaration(node) &&
+					!tsu.isNamespaceDeclaration(node) &&
 					node.modifiers?.some((modifier) => tsu.isDeclareKeyword(modifier))
 				) {
 					result.remove(node.pos, node.end);

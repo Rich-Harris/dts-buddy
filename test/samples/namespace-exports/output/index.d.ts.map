@@ -1,0 +1,17 @@
+{
+	"version": 3,
+	"file": "index.d.ts",
+	"names": [
+		"X",
+		"Namespace"
+	],
+	"sources": [
+		"../input/index.ts",
+		"../input/namespace.ts"
+	],
+	"sourcesContent": [
+		null,
+		null
+	],
+	"mappings": ";aAEYA,CAACA;WCFIC,SAASA"
+}

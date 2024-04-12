@@ -49,24 +49,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 	{
 		const included = new Set([entry]);
 
-		/**
-		 * @param {string} module
-		 * @param {string} name
-		 * @param {string} alias
-		 * @returns {import('./types').Declaration}
-		 */
-		const create_external_declaration = (module, name, alias) => {
-			return {
-				module,
-				name,
-				alias: '',
-				external: true,
-				included: false,
-				dependencies: [],
-				preferred_alias: alias
-			};
-		};
-
 		for (const file of included) {
 			const module = get_dts(file, created, resolve);
 
@@ -81,8 +63,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			for (const [name, binding] of module.imports) {
 				if (binding.external) {
 					(external_imports[binding.id] ??= {})[binding.name] ??= create_external_declaration(
-						binding.id,
-						binding.name,
+						binding,
 						name
 					);
 				}
@@ -91,8 +72,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			for (const [name, binding] of module.import_all) {
 				if (binding.external) {
 					(external_import_alls[binding.id] ??= {})[binding.name] ??= create_external_declaration(
-						binding.id,
-						binding.name,
+						binding,
 						name
 					);
 				}
@@ -101,8 +81,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 			for (const [name, binding] of module.export_from) {
 				if (binding.external) {
 					(external_export_from[binding.id] ??= {})[binding.name] ??= create_external_declaration(
-						binding.id,
-						binding.name,
+						binding,
 						name
 					);
 				}
@@ -522,5 +501,22 @@ export function create_module_declaration(id, entry, created, resolve) {
 		content,
 		mappings,
 		ambient
+	};
+}
+
+/**
+ * @param {import('./types').Binding} binding
+ * @param {string} alias
+ * @returns {import('./types').Declaration}
+ */
+function create_external_declaration(binding, alias) {
+	return {
+		module: binding.id,
+		name: binding.name,
+		alias: '',
+		external: true,
+		included: false,
+		dependencies: [],
+		preferred_alias: alias
 	};
 }

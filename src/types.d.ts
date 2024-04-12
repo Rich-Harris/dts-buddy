@@ -11,6 +11,7 @@ interface Declaration {
 	module: string;
 	name: string;
 	alias: string;
+	exported: boolean;
 	external: boolean;
 	included: boolean;
 	dependencies: Reference[];
@@ -42,6 +43,8 @@ export interface Module {
 		mappings: SourceMapMappings;
 	};
 	dependencies: string[];
+	globals: string[];
+	references: Set<string>;
 	declarations: Map<string, Declaration>;
 	imports: Map<string, Binding>;
 	import_all: Map<string, Binding>;
@@ -50,6 +53,12 @@ export interface Module {
 	ambient_imports: ModuleReference[];
 
 	/** A map of <exported, local> exports */
+	exports: Map<string, string>;
+}
+
+export interface Namespace {
+	declarations: Map<string, Declaration>;
+	references: Set<string>;
 	exports: Map<string, string>;
 }
 

@@ -45,12 +45,22 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/** @type {Set<string>} */
 	const exports = new Set();
 
+	/** @type {Set<string>} */
+	const globals = new Set();
+
+	/** @type {string[]} */
+	const export_specifiers = [];
+
 	// step 1 — discover which modules are included in the bundle
 	{
 		const included = new Set([entry]);
 
 		for (const file of included) {
 			const module = get_dts(file, created, resolve);
+
+			for (const name of module.globals) {
+				globals.add(name);
+			}
 
 			for (const dep of module.dependencies) {
 				included.add(dep);
@@ -121,7 +131,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 	// step 2 - treeshaking
 	{
 		/** @type {Set<string>} */
-		const names = new Set();
+		const names = new Set(globals);
 
 		/** @type {Set<import('./types').Declaration>} */
 		const declarations = new Set();
@@ -155,8 +165,14 @@ export function create_module_declaration(id, entry, created, resolve) {
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration) {
-				declaration.alias = get_name(name);
+				declaration.alias = get_name(globals.has(name) ? declaration.name : name);
 				mark(declaration);
+
+				if (declaration.alias !== name) {
+					export_specifiers.push(`${declaration.alias} as ${name}`);
+				} else {
+					declaration.exported = true;
+				}
 			} else {
 				throw new Error('Something strange happened');
 			}
@@ -314,14 +330,13 @@ export function create_module_declaration(id, entry, created, resolve) {
 
 							if (!exports.has(declaration.alias)) {
 								// remove all export keywords in the initial pass; reinstate as necessary later
-								// TODO only do this for things that aren't exported from the entry point
 								let b = export_modifier.end;
 								const a = b - 6;
 								while (/\s/.test(module.dts[b])) b += 1;
 								result.remove(a, b);
 							}
-						} else if (exports.has(declaration.alias)) {
-							result.appendRight(node.getStart(module.ast), 'export ');
+						} else if (declaration.exported) {
+							export_specifiers.push(declaration.alias);
 						}
 					}
 
@@ -384,6 +399,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 				.replace(/^(    )+/gm, (match) => '\t'.repeat(match.length / 4));
 
 			if (mod) content += '\n' + mod;
+		}
+
+		if (export_specifiers.length > 0) {
+			content += `\n\n\texport { ${export_specifiers.join(', ')} };`;
 		}
 
 		// finally, export any bindings that are exported from external modules

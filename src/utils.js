@@ -193,6 +193,8 @@ export function get_dts(file, created, resolve) {
 		locator,
 		source: null,
 		dependencies: [],
+		globals: [],
+		references: new Set(),
 		declarations: new Map(),
 		imports: new Map(),
 		exports: new Map(),
@@ -214,6 +216,9 @@ export function get_dts(file, created, resolve) {
 			mappings: decode(map.mappings)
 		};
 	}
+
+	/** @type {import('./types').Module | import('./types').Namespace} */
+	let current = module;
 
 	/** @param {ts.Node} node */
 	function scan(node) {
@@ -330,12 +335,13 @@ export function get_dts(file, created, resolve) {
 			const name = identifier.getText(module.ast);
 
 			// in the case of overloads, declaration may already exist
-			const existing = module.declarations.get(name);
+			const existing = current.declarations.get(name);
 			if (!existing) {
-				module.declarations.set(name, {
+				current.declarations.set(name, {
 					module: file,
 					name,
 					alias: '',
+					exported: false,
 					included: false,
 					external: false,
 					dependencies: [],
@@ -344,14 +350,14 @@ export function get_dts(file, created, resolve) {
 			}
 
 			const declaration = /** @type {import('./types').Declaration} */ (
-				module.declarations.get(name)
+				current.declarations.get(name)
 			);
 
 			const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
 
 			if (export_modifier) {
 				const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
-				module.exports.set(default_modifier ? 'default' : name, name);
+				current.exports.set(default_modifier ? 'default' : name, name);
 			}
 
 			const params = new Set();
@@ -363,46 +369,63 @@ export function get_dts(file, created, resolve) {
 				}
 			}
 
-			walk(node, (node) => {
-				// `import('./foo').Foo` -> `Foo`
-				if (
-					ts.isImportTypeNode(node) &&
-					ts.isLiteralTypeNode(node.argument) &&
-					ts.isStringLiteral(node.argument.literal)
-				) {
-					// follow import
-					const resolved = resolve(file, node.argument.literal.text);
-					if (resolved) {
-						module.dependencies.push(resolved);
+			if (tsu.isNamespaceDeclaration(node)) {
+				const previous = current;
+				current = { declarations: new Map(), references: new Set(), exports: new Map() };
 
-						if (node.qualifier) {
+				node.body.forEachChild(scan);
+
+				for (const name of current.references) {
+					if (!current.declarations.has(name)) {
+						previous.references.add(name);
+					}
+				}
+
+				current = previous;
+			} else {
+				walk(node, (node) => {
+					// `import('./foo').Foo` -> `Foo`
+					if (
+						ts.isImportTypeNode(node) &&
+						ts.isLiteralTypeNode(node.argument) &&
+						ts.isStringLiteral(node.argument.literal)
+					) {
+						// follow import
+						const resolved = resolve(file, node.argument.literal.text);
+						if (resolved) {
+							module.dependencies.push(resolved);
+
+							if (node.qualifier) {
+								declaration.dependencies.push({
+									module: resolved ?? node.argument.literal.text,
+									name: node.qualifier.getText(module.ast)
+								});
+							}
+						}
+					}
+
+					if (is_reference(node)) {
+						const name = node.getText(module.ast);
+						if (params.has(name)) return;
+
+						current.references.add(name);
+
+						if (name !== declaration.name) {
 							declaration.dependencies.push({
-								module: resolved ?? node.argument.literal.text,
-								name: node.qualifier.getText(module.ast)
+								module: file,
+								name
 							});
 						}
 					}
-				}
-
-				if (is_reference(node)) {
-					const name = node.getText(module.ast);
-					if (params.has(name)) return;
-
-					if (name !== declaration.name) {
-						declaration.dependencies.push({
-							module: file,
-							name
-						});
-					}
-				}
-			});
+				});
+			}
 
 			return;
 		}
 
 		if (ts.isExportAssignment(node)) {
 			const name = node.expression.getText(module.ast);
-			module.exports.set('default', name);
+			current.exports.set('default', name);
 			return;
 		}
 
@@ -414,10 +437,16 @@ export function get_dts(file, created, resolve) {
 
 		if (ts.isEnumDeclaration(node)) return;
 
-		throw new Error(`Unimplemented node type ${ts.SyntaxKind[node.kind]}`);
+		// throw new Error(`Unimplemented node type ${ts.SyntaxKind[node.kind]}`);
 	}
 
 	ast.statements.forEach(scan);
+
+	for (const name of module.references) {
+		if (!module.declarations.has(name) && !module.imports.has(name)) {
+			module.globals.push(name);
+		}
+	}
 
 	return module;
 }
@@ -493,8 +522,20 @@ export function is_reference(node) {
 		if (ts.isPropertySignature(node.parent)) return false;
 		if (ts.isParameter(node.parent)) return false;
 		if (ts.isMethodDeclaration(node.parent)) return false;
-		if (ts.isLabeledStatement(node.parent) || ts.isBreakOrContinueStatement(node.parent))
-			return false;
+		if (ts.isLabeledStatement(node.parent)) return false;
+		if (ts.isBreakOrContinueStatement(node.parent)) return false;
+		if (ts.isEnumMember(node.parent)) return false;
+
+		// `const = { x: 1 }` inexplicably becomes `namespace a { let x: number; }`
+		if (ts.isVariableDeclaration(node.parent)) {
+			if (node === node.parent.initializer) return true;
+
+			const ancestor = node.parent.parent?.parent?.parent?.parent;
+
+			if (ancestor && tsu.isNamespaceDeclaration(node.parent.parent.parent.parent.parent)) {
+				return false;
+			}
+		}
 	}
 
 	return true;

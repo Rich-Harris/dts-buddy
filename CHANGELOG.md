@@ -1,5 +1,10 @@
 # dts-buddy changelog
 
+## 0.4.7
+
+- Preserve renamed exports ([#78](https://github.com/Rich-Harris/dts-buddy/pull/78))
+- Avoid conflicts with globals ([#78](https://github.com/Rich-Harris/dts-buddy/pull/78))
+
 ## 0.4.6
 
 - Handle namespaces ([#77](https://github.com/Rich-Harris/dts-buddy/pull/77))

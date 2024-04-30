@@ -4,6 +4,8 @@ import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
 import { clean_jsdoc, get_dts, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
 
+/** @import { Binding, Declaration, Mapping, Module, ModuleReference } from './types' */
+
 /**
  * @param {string} id
  * @param {string} entry
@@ -11,35 +13,35 @@ import { clean_jsdoc, get_dts, is_declaration, is_reference, resolve_dts, walk }
  * @param {(file: string, specifier: string) => string | null} resolve
  * @returns {{
  *   content: string;
- *   mappings: Map<string, import('./types').Mapping>;
- *   ambient: import('./types').ModuleReference[];
+ *   mappings: Map<string, Mapping>;
+ *   ambient: ModuleReference[];
  * }}
  */
 export function create_module_declaration(id, entry, created, resolve) {
 	let content = '';
 
-	/** @type {Map<string, import('./types').Mapping>} */
+	/** @type {Map<string, Mapping>} */
 	const mappings = new Map();
 
-	/** @type {import('./types').ModuleReference[]} */
+	/** @type {ModuleReference[]} */
 	const ambient = [];
 
-	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	/** @type {Record<string, Record<string, Declaration>>} */
 	const external_imports = {};
 
-	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	/** @type {Record<string, Record<string, Declaration>>} */
 	const external_import_alls = {};
 
-	/** @type {Record<string, Record<string, import('./types').Declaration>>} */
+	/** @type {Record<string, Record<string, Declaration>>} */
 	const external_export_from = {};
 
 	/** @type {Set<string>} */
 	const external_export_all_from = new Set();
 
-	/** @type {Map<string, import('./types').Module>} */
+	/** @type {Map<string, Module>} */
 	const bundle = new Map();
 
-	/** @type {Map<string, Map<string, import('./types').Declaration>>} */
+	/** @type {Map<string, Map<string, Declaration>>} */
 	const traced = new Map();
 
 	/** @type {Set<string>} */
@@ -107,10 +109,8 @@ export function create_module_declaration(id, entry, created, resolve) {
 			traced.set(file, new Map());
 		}
 
-		/** @type {Set<import('./types').Module>} */
-		const modules_to_export_all_from = new Set([
-			/** @type {import('./types').Module} */ (bundle.get(entry))
-		]);
+		/** @type {Set<Module>} */
+		const modules_to_export_all_from = new Set([/** @type {Module} */ (bundle.get(entry))]);
 
 		for (const module of modules_to_export_all_from) {
 			for (const exported of module.exports.keys()) {
@@ -133,7 +133,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		/** @type {Set<string>} */
 		const names = new Set(globals);
 
-		/** @type {Set<import('./types').Declaration>} */
+		/** @type {Set<Declaration>} */
 		const declarations = new Set();
 
 		/** @param {string} name */
@@ -148,7 +148,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		}
 
 		/**
-		 * @param {import('./types').Declaration} declaration
+		 * @param {Declaration} declaration
 		 */
 		const mark = (declaration) => {
 			if (declaration.included) return;
@@ -257,9 +257,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 						throw new Error('TODO');
 					}
 
-					const declaration = /** @type {import('./types').Declaration} */ (
-						module.declarations.get(name)
-					);
+					const declaration = /** @type {Declaration} */ (module.declarations.get(name));
 
 					if (!declaration.included) {
 						result.remove(node.pos, node.end);
@@ -310,7 +308,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 													line: l + 1,
 													column: match.index
 												};
-												mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
+												mappings.set(name, /** @type {Mapping} */ (mapping));
 											} else {
 												// TODO figure out how to repair sourcemaps in this case
 											}
@@ -323,7 +321,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 											line: loc.line,
 											column: loc.column
 										};
-										mappings.set(name, /** @type {import('./types').Mapping} */ (mapping));
+										mappings.set(name, /** @type {Mapping} */ (mapping));
 									}
 								}
 							}
@@ -427,7 +425,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/**
 	 * @param {string} module_id
 	 * @param {string} name
-	 * @returns {import('./types').Declaration | null}
+	 * @returns {Declaration | null}
 	 */
 	function trace_export(module_id, name) {
 		if (module_id === id) {
@@ -465,7 +463,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 	/**
 	 * @param {string} id
 	 * @param {string} name
-	 * @returns {import('./types').Declaration}
+	 * @returns {Declaration}
 	 */
 	function trace(id, name) {
 		const cache = traced.get(id);
@@ -480,7 +478,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		}
 
 		if (cache.has(name)) {
-			return /** @type {import('./types').Declaration} */ (cache.get(name));
+			return /** @type {Declaration} */ (cache.get(name));
 		}
 
 		const module = bundle.get(id);
@@ -529,9 +527,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 }
 
 /**
- * @param {import('./types').Binding} binding
+ * @param {Binding} binding
  * @param {string} alias
- * @returns {import('./types').Declaration}
+ * @returns {Declaration}
  */
 function create_external_declaration(binding, alias) {
 	return {

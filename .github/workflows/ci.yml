@@ -37,7 +37,7 @@ jobs:
       matrix:
         node: [18, 20]
         os: [ubuntu-latest]
-        typescript: ['5.0', '5.1', '5.2', '5.3', '5.4']
+        typescript: ['5.0', '5.1', '5.2', '5.3', '5.4', '5.5']
         include:
           - node: 18
             os: windows-latest

@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.5.0
+
+- Prevent unintended exports ([#82](https://github.com/Rich-Harris/dts-buddy/pull/82))
+
 ## 0.4.7
 
 - Preserve renamed exports ([#78](https://github.com/Rich-Harris/dts-buddy/pull/78))

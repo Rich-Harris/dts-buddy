@@ -20,7 +20,7 @@ declare module 'basic/subpackage' {
 	/**
 	 * Multiply two vectors
 	 * */
-	function multiply(a: import("basic").Vector2, b: import("basic").Vector2): import("basic").Vector2;
+	function multiply(a: import('basic').Vector2, b: import('basic').Vector2): import('basic').Vector2;
 
 	export { multiply };
 }

@@ -6,7 +6,7 @@ declare module 'shadowing' {
 		constructor(iterable?: Iterable<readonly [any, any]>);
 	}
 
-	export { MyMap as Map, MyMap };
+	export { MyMap as Map };
 }
 
 //# sourceMappingURL=index.d.ts.map

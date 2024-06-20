@@ -171,8 +171,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 				export_specifiers.push(
 					declaration.alias === name ? name : `${declaration.alias} as ${name}`
 				);
-
-				declaration.exported = true;
 			} else {
 				throw new Error('Something strange happened');
 			}
@@ -332,8 +330,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 							const a = b - 6;
 							while (/\s/.test(module.dts[b])) b += 1;
 							result.remove(a, b);
-						} else if (declaration.exported) {
-							export_specifiers.push(declaration.alias);
 						}
 					}
 
@@ -507,7 +503,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 				module: '<builtin>',
 				external: false,
 				included: true,
-				exported: false,
 				name,
 				alias: name,
 				dependencies: [],
@@ -535,7 +530,6 @@ function create_external_declaration(binding, alias) {
 		module: binding.id,
 		name: binding.name,
 		alias: '',
-		exported: false,
 		external: true,
 		included: false,
 		dependencies: [],

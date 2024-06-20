@@ -2,7 +2,9 @@ declare module 'throws' {
 	/**
 	 * @throws {Error} nope
 	 * */
-	export function nope(): never;
+	function nope(): never;
+
+	export { nope };
 }
 
 //# sourceMappingURL=index.d.ts.map

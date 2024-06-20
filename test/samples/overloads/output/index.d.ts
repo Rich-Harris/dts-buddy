@@ -3,8 +3,10 @@ declare module 'overloads' {
 	}
 	interface Bar {
 	}
-	export function baz(input: Foo): Foo;
-	export function baz(input: Bar): Bar;
+	function baz(input: Foo): Foo;
+	function baz(input: Bar): Bar;
+
+	export { baz };
 }
 
 //# sourceMappingURL=index.d.ts.map

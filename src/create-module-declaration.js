@@ -168,11 +168,9 @@ export function create_module_declaration(id, entry, created, resolve) {
 				declaration.alias = get_name(globals.has(name) ? declaration.name : name);
 				mark(declaration);
 
-				if (declaration.alias !== name) {
-					export_specifiers.push(`${declaration.alias} as ${name}`);
-				} else {
-					declaration.exported = true;
-				}
+				export_specifiers.push(
+					declaration.alias === name ? name : `${declaration.alias} as ${name}`
+				);
 			} else {
 				throw new Error('Something strange happened');
 			}
@@ -328,15 +326,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 								}
 							}
 
-							if (!exports.has(declaration.alias)) {
-								// remove all export keywords in the initial pass; reinstate as necessary later
-								let b = export_modifier.end;
-								const a = b - 6;
-								while (/\s/.test(module.dts[b])) b += 1;
-								result.remove(a, b);
-							}
-						} else if (declaration.exported) {
-							export_specifiers.push(declaration.alias);
+							let b = export_modifier.end;
+							const a = b - 6;
+							while (/\s/.test(module.dts[b])) b += 1;
+							result.remove(a, b);
 						}
 					}
 
@@ -510,7 +503,6 @@ export function create_module_declaration(id, entry, created, resolve) {
 				module: '<builtin>',
 				external: false,
 				included: true,
-				exported: false,
 				name,
 				alias: name,
 				dependencies: [],
@@ -538,7 +530,6 @@ function create_external_declaration(binding, alias) {
 		module: binding.id,
 		name: binding.name,
 		alias: '',
-		exported: false,
 		external: true,
 		included: false,
 		dependencies: [],

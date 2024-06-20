@@ -2,7 +2,7 @@ declare module 'treeshaking-inline-import' {
 	/**
 	 * Add two vectors
 	 * */
-	export function add(a: Vector2, b: Vector2): Vector2;
+	function add(a: Vector2, b: Vector2): Vector2;
 	/** A vector with two components */
 	interface Vector2 {
 		/** The x component */
@@ -10,6 +10,8 @@ declare module 'treeshaking-inline-import' {
 		/** The y component */
 		y: number;
 	}
+
+	export { add };
 }
 
 //# sourceMappingURL=index.d.ts.map

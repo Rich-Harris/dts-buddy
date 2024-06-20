@@ -1,214 +1,249 @@
-lockfileVersion: '6.0'
+lockfileVersion: '9.0'
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  '@jridgewell/source-map':
-    specifier: ^0.3.5
-    version: 0.3.5
-  '@jridgewell/sourcemap-codec':
-    specifier: ^1.4.15
-    version: 1.4.15
-  globrex:
-    specifier: ^0.1.2
-    version: 0.1.2
-  kleur:
-    specifier: ^4.1.5
-    version: 4.1.5
-  locate-character:
-    specifier: ^3.0.0
-    version: 3.0.0
-  magic-string:
-    specifier: ^0.30.4
-    version: 0.30.5
-  sade:
-    specifier: ^1.8.1
-    version: 1.8.1
-  tiny-glob:
-    specifier: ^0.2.9
-    version: 0.2.9
-  ts-api-utils:
-    specifier: ^1.0.3
-    version: 1.0.3(typescript@5.4.2)
+importers:
 
-devDependencies:
-  '@types/globrex':
-    specifier: ^0.1.2
-    version: 0.1.2
-  '@types/node':
-    specifier: ^20.7.2
-    version: 20.8.6
-  '@types/semver':
-    specifier: ^7.5.3
-    version: 7.5.3
-  prettier:
-    specifier: ^3.0.3
-    version: 3.0.3
-  semver:
-    specifier: ^7.5.4
-    version: 7.5.4
-  typescript:
-    specifier: ~5.4.2
-    version: 5.4.2
-  uvu:
-    specifier: ^0.5.6
-    version: 0.5.6
+  .:
+    dependencies:
+      '@jridgewell/source-map':
+        specifier: ^0.3.5
+        version: 0.3.5
+      '@jridgewell/sourcemap-codec':
+        specifier: ^1.4.15
+        version: 1.4.15
+      globrex:
+        specifier: ^0.1.2
+        version: 0.1.2
+      kleur:
+        specifier: ^4.1.5
+        version: 4.1.5
+      locate-character:
+        specifier: ^3.0.0
+        version: 3.0.0
+      magic-string:
+        specifier: ^0.30.4
+        version: 0.30.5
+      sade:
+        specifier: ^1.8.1
+        version: 1.8.1
+      tiny-glob:
+        specifier: ^0.2.9
+        version: 0.2.9
+      ts-api-utils:
+        specifier: ^1.0.3
+        version: 1.0.3(typescript@5.5.2)
+    devDependencies:
+      '@types/globrex':
+        specifier: ^0.1.2
+        version: 0.1.2
+      '@types/node':
+        specifier: ^20.7.2
+        version: 20.8.6
+      '@types/semver':
+        specifier: ^7.5.3
+        version: 7.5.3
+      prettier:
+        specifier: ^3.0.3
+        version: 3.0.3
+      semver:
+        specifier: ^7.5.4
+        version: 7.5.4
+      typescript:
+        specifier: ~5.5.2
+        version: 5.5.2
+      uvu:
+        specifier: ^0.5.6
+        version: 0.5.6
 
 packages:
 
-  /@jridgewell/gen-mapping@0.3.3:
+  '@jridgewell/gen-mapping@0.3.3':
     resolution: {integrity: sha512-HLhSWOLRi875zjjMG/r+Nv0oCW8umGb0BgEhyX3dDX3egwZtB8PqLnjz3yedt8R5StBrzcg4aBpnh8UA9D1BoQ==}
     engines: {node: '>=6.0.0'}
-    dependencies:
-      '@jridgewell/set-array': 1.1.2
-      '@jridgewell/sourcemap-codec': 1.4.15
-      '@jridgewell/trace-mapping': 0.3.19
-    dev: false
 
-  /@jridgewell/resolve-uri@3.1.1:
+  '@jridgewell/resolve-uri@3.1.1':
     resolution: {integrity: sha512-dSYZh7HhCDtCKm4QakX0xFpsRDqjjtZf/kjI/v3T3Nwt5r8/qz/M19F9ySyOqU94SXBmeG9ttTul+YnR4LOxFA==}
     engines: {node: '>=6.0.0'}
-    dev: false
 
-  /@jridgewell/set-array@1.1.2:
+  '@jridgewell/set-array@1.1.2':
     resolution: {integrity: sha512-xnkseuNADM0gt2bs+BvhO0p78Mk762YnZdsuzFV018NoG1Sj1SCQvpSqa7XUaTam5vAGasABV9qXASMKnFMwMw==}
     engines: {node: '>=6.0.0'}
-    dev: false
 
-  /@jridgewell/source-map@0.3.5:
+  '@jridgewell/source-map@0.3.5':
     resolution: {integrity: sha512-UTYAUj/wviwdsMfzoSJspJxbkH5o1snzwX0//0ENX1u/55kkZZkcTZP6u9bwKGkv+dkk9at4m1Cpt0uY80kcpQ==}
-    dependencies:
-      '@jridgewell/gen-mapping': 0.3.3
-      '@jridgewell/trace-mapping': 0.3.19
-    dev: false
 
-  /@jridgewell/sourcemap-codec@1.4.15:
+  '@jridgewell/sourcemap-codec@1.4.15':
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
-    dev: false
 
-  /@jridgewell/trace-mapping@0.3.19:
+  '@jridgewell/trace-mapping@0.3.19':
     resolution: {integrity: sha512-kf37QtfW+Hwx/buWGMPcR60iF9ziHa6r/CZJIHbmcm4+0qrXiVdxegAH0F6yddEVQ7zdkjcGCgCzUu+BcbhQxw==}
-    dependencies:
-      '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.4.15
-    dev: false
 
-  /@types/globrex@0.1.2:
+  '@types/globrex@0.1.2':
     resolution: {integrity: sha512-W+8iW69LnEae5H09PxjpmI3CdJyKUTBAoDyqWx6T5ewhX5unBHYYQsGYXlXQP8l3HE/Y71vswPAvxkJC92FQhQ==}
-    dev: true
 
-  /@types/node@20.8.6:
+  '@types/node@20.8.6':
     resolution: {integrity: sha512-eWO4K2Ji70QzKUqRy6oyJWUeB7+g2cRagT3T/nxYibYcT4y2BDL8lqolRXjTHmkZCdJfIPaY73KbJAZmcryxTQ==}
-    dependencies:
-      undici-types: 5.25.3
-    dev: true
 
-  /@types/semver@7.5.3:
+  '@types/semver@7.5.3':
     resolution: {integrity: sha512-OxepLK9EuNEIPxWNME+C6WwbRAOOI2o2BaQEGzz5Lu2e4Z5eDnEo+/aVEDMIXywoJitJ7xWd641wrGLZdtwRyw==}
-    dev: true
 
-  /dequal@2.0.3:
+  dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
-    dev: true
 
-  /diff@5.1.0:
+  diff@5.1.0:
     resolution: {integrity: sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==}
     engines: {node: '>=0.3.1'}
-    dev: true
 
-  /globalyzer@0.1.0:
+  globalyzer@0.1.0:
     resolution: {integrity: sha512-40oNTM9UfG6aBmuKxk/giHn5nQ8RVz/SS4Ir6zgzOv9/qC3kKZ9v4etGTcJbEl/NyVQH7FGU7d+X1egr57Md2Q==}
-    dev: false
 
-  /globrex@0.1.2:
+  globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
-    dev: false
 
-  /kleur@4.1.5:
+  kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
-  /locate-character@3.0.0:
+  locate-character@3.0.0:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
-    dev: false
 
-  /lru-cache@6.0.0:
+  lru-cache@6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
-    dependencies:
-      yallist: 4.0.0
-    dev: true
 
-  /magic-string@0.30.5:
+  magic-string@0.30.5:
     resolution: {integrity: sha512-7xlpfBaQaP/T6Vh8MO/EqXSW5En6INHEvEXQiuff7Gku0PWjU3uf6w/j9o7O+SpB5fOAkrI5HeoNgwjEO0pFsA==}
     engines: {node: '>=12'}
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.4.15
-    dev: false
 
-  /mri@1.2.0:
+  mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
 
-  /prettier@3.0.3:
+  prettier@3.0.3:
     resolution: {integrity: sha512-L/4pUDMxcNa8R/EthV08Zt42WBO4h1rarVtK0K+QJG0X187OLo7l699jWw0GKuwzkPQ//jMFA/8Xm6Fh3J/DAg==}
     engines: {node: '>=14'}
     hasBin: true
-    dev: true
 
-  /sade@1.8.1:
+  sade@1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
     engines: {node: '>=6'}
-    dependencies:
-      mri: 1.2.0
 
-  /semver@7.5.4:
+  semver@7.5.4:
     resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
     engines: {node: '>=10'}
     hasBin: true
-    dependencies:
-      lru-cache: 6.0.0
-    dev: true
 
-  /tiny-glob@0.2.9:
+  tiny-glob@0.2.9:
     resolution: {integrity: sha512-g/55ssRPUjShh+xkfx9UPDXqhckHEsHr4Vd9zX55oSdGZc/MD0m3sferOkwWtp98bv+kcVfEHtRJgBVJzelrzg==}
-    dependencies:
-      globalyzer: 0.1.0
-      globrex: 0.1.2
-    dev: false
 
-  /ts-api-utils@1.0.3(typescript@5.4.2):
+  ts-api-utils@1.0.3:
     resolution: {integrity: sha512-wNMeqtMz5NtwpT/UZGY5alT+VoKdSsOOP/kqHFcUW1P/VRhH2wJ48+DN2WwUliNbQ976ETwDL0Ifd2VVvgonvg==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
       typescript: '>=4.2.0'
-    dependencies:
-      typescript: 5.4.2
-    dev: false
 
-  /typescript@5.4.2:
-    resolution: {integrity: sha512-+2/g0Fds1ERlP6JsakQQDXjZdZMM+rqpamFZJEKh4kwTIn3iDkgKtby0CeNd5ATNZ4Ry1ax15TMx0W2V+miizQ==}
+  typescript@5.5.2:
+    resolution: {integrity: sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==}
     engines: {node: '>=14.17'}
     hasBin: true
 
-  /undici-types@5.25.3:
+  undici-types@5.25.3:
     resolution: {integrity: sha512-Ga1jfYwRn7+cP9v8auvEXN1rX3sWqlayd4HP7OKk4mZWylEmu3KzXDUGrQUN6Ol7qo1gPvB2e5gX6udnyEPgdA==}
-    dev: true
 
-  /uvu@0.5.6:
+  uvu@0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
     engines: {node: '>=8'}
     hasBin: true
+
+  yallist@4.0.0:
+    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
+
+snapshots:
+
+  '@jridgewell/gen-mapping@0.3.3':
+    dependencies:
+      '@jridgewell/set-array': 1.1.2
+      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/trace-mapping': 0.3.19
+
+  '@jridgewell/resolve-uri@3.1.1': {}
+
+  '@jridgewell/set-array@1.1.2': {}
+
+  '@jridgewell/source-map@0.3.5':
+    dependencies:
+      '@jridgewell/gen-mapping': 0.3.3
+      '@jridgewell/trace-mapping': 0.3.19
+
+  '@jridgewell/sourcemap-codec@1.4.15': {}
+
+  '@jridgewell/trace-mapping@0.3.19':
+    dependencies:
+      '@jridgewell/resolve-uri': 3.1.1
+      '@jridgewell/sourcemap-codec': 1.4.15
+
+  '@types/globrex@0.1.2': {}
+
+  '@types/node@20.8.6':
+    dependencies:
+      undici-types: 5.25.3
+
+  '@types/semver@7.5.3': {}
+
+  dequal@2.0.3: {}
+
+  diff@5.1.0: {}
+
+  globalyzer@0.1.0: {}
+
+  globrex@0.1.2: {}
+
+  kleur@4.1.5: {}
+
+  locate-character@3.0.0: {}
+
+  lru-cache@6.0.0:
+    dependencies:
+      yallist: 4.0.0
+
+  magic-string@0.30.5:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.15
+
+  mri@1.2.0: {}
+
+  prettier@3.0.3: {}
+
+  sade@1.8.1:
+    dependencies:
+      mri: 1.2.0
+
+  semver@7.5.4:
+    dependencies:
+      lru-cache: 6.0.0
+
+  tiny-glob@0.2.9:
+    dependencies:
+      globalyzer: 0.1.0
+      globrex: 0.1.2
+
+  ts-api-utils@1.0.3(typescript@5.5.2):
+    dependencies:
+      typescript: 5.5.2
+
+  typescript@5.5.2: {}
+
+  undici-types@5.25.3: {}
+
+  uvu@0.5.6:
     dependencies:
       dequal: 2.0.3
       diff: 5.1.0
       kleur: 4.1.5
       sade: 1.8.1
-    dev: true
 
-  /yallist@4.0.0:
-    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
-    dev: true
+  yallist@4.0.0: {}

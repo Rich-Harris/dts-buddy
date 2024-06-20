@@ -1,5 +1,7 @@
 declare module 'export-from' {
-	export const foo: "hello";
+	const foo: "hello";
+
+	export { foo };
 }
 
 //# sourceMappingURL=index.d.ts.map

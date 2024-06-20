@@ -1,6 +1,8 @@
 declare module 'import-external-default' {
 	import type { default as x } from 'external';
-	export function foo(input: x): x;
+	function foo(input: x): x;
+
+	export { foo };
 }
 
 //# sourceMappingURL=index.d.ts.map

@@ -168,11 +168,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 				declaration.alias = get_name(globals.has(name) ? declaration.name : name);
 				mark(declaration);
 
-				if (declaration.alias !== name) {
-					export_specifiers.push(`${declaration.alias} as ${name}`);
-				} else {
-					declaration.exported = true;
-				}
+				export_specifiers.push(
+					declaration.alias === name ? name : `${declaration.alias} as ${name}`
+				);
+
+				declaration.exported = true;
 			} else {
 				throw new Error('Something strange happened');
 			}
@@ -328,13 +328,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 								}
 							}
 
-							if (!exports.has(declaration.alias)) {
-								// remove all export keywords in the initial pass; reinstate as necessary later
-								let b = export_modifier.end;
-								const a = b - 6;
-								while (/\s/.test(module.dts[b])) b += 1;
-								result.remove(a, b);
-							}
+							let b = export_modifier.end;
+							const a = b - 6;
+							while (/\s/.test(module.dts[b])) b += 1;
+							result.remove(a, b);
 						} else if (declaration.exported) {
 							export_specifiers.push(declaration.alias);
 						}

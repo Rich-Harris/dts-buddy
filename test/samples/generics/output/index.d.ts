@@ -1,7 +1,9 @@
 declare module 'generics' {
-	export interface Foo<T> {
+	interface Foo<T> {
 		bar: T;
 	}
+
+	export { Foo };
 }
 
 //# sourceMappingURL=index.d.ts.map

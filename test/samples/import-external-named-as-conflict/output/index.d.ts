@@ -1,6 +1,8 @@
 declare module 'import-external-named-as-conflict' {
 	import type { foo as f } from 'external';
-	export function foo(): void;
+	function foo(): void;
+
+	export { foo, f };
 	export { f };
 }
 

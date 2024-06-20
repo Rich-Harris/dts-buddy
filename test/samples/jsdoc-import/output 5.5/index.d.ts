@@ -4,7 +4,7 @@ declare module 'jsdoc-import' {
 	 * @param a the first vector
 	 * @param b the second vector
 	 * */
-	export function add(a: Vector2, b: Vector2): Vector2;
+	function add(a: Vector2, b: Vector2): Vector2;
 	/** A vector with two components */
 	interface Vector2 {
 		/** The x component */
@@ -12,6 +12,8 @@ declare module 'jsdoc-import' {
 		/** The y component */
 		y: number;
 	}
+
+	export { add };
 }
 
 //# sourceMappingURL=index.d.ts.map

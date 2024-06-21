@@ -67,4 +67,4 @@ interface Mapping {
 	column: number;
 }
 
-export { Binding, Declaration, Mapping, Module, ModuleReference };
+export { Binding, Declaration, Mapping, Module, ModuleReference, Namespace };

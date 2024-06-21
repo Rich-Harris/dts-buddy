@@ -1,3 +1,4 @@
+/** @import { Declaration, Module, Namespace } from './types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
@@ -6,8 +7,6 @@ import ts from 'typescript';
 import * as tsu from 'ts-api-utils';
 import { getLocator } from 'locate-character';
 import { decode } from '@jridgewell/sourcemap-codec';
-
-/** @import { Declaration, Module, Namespace } from './types' */
 
 const preserved_jsdoc_tags = new Set(['default', 'deprecated', 'example']);
 

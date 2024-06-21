@@ -1,10 +1,9 @@
+/** @import { Binding, Declaration, Mapping, Module, ModuleReference } from './types' */
 import path from 'node:path';
 import ts from 'typescript';
 import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
 import { clean_jsdoc, get_dts, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
-
-/** @import { Binding, Declaration, Mapping, Module, ModuleReference } from './types' */
 
 /**
  * @param {string} id

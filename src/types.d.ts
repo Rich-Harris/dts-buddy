@@ -7,7 +7,7 @@ interface Reference {
 	name: string;
 }
 
-export interface Declaration {
+interface Declaration {
 	module: string;
 	name: string;
 	alias: string;
@@ -20,18 +20,18 @@ export interface Declaration {
 	preferred_alias: string;
 }
 
-export interface Binding {
+interface Binding {
 	id: string;
 	external: boolean;
 	name: string;
 }
 
-export interface ModuleReference {
+interface ModuleReference {
 	id: string;
 	external: boolean;
 }
 
-export interface Module {
+interface Module {
 	file: string;
 	dts: string;
 	ast: SourceFile;
@@ -55,14 +55,16 @@ export interface Module {
 	exports: Map<string, string>;
 }
 
-export interface Namespace {
+interface Namespace {
 	declarations: Map<string, Declaration>;
 	references: Set<string>;
 	exports: Map<string, string>;
 }
 
-export interface Mapping {
+interface Mapping {
 	source: string;
 	line: number;
 	column: number;
 }
+
+export { Binding, Declaration, Mapping, Module, ModuleReference };

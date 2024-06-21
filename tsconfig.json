@@ -10,6 +10,7 @@
 		"module": "esnext",
 		"target": "esnext",
 		"moduleResolution": "bundler",
+		"skipLibCheck": true,
 		"strict": true
 	},
 	"include": ["src", "scripts", "test/test.js"]

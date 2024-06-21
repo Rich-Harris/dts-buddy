@@ -1,3 +1,4 @@
+/** @import { Declaration, Module, Namespace } from './types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
@@ -185,7 +186,7 @@ export function get_dts(file, created, resolve) {
 	const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 	const locator = getLocator(dts, { offsetLine: 1 });
 
-	/** @type {import('./types').Module} */
+	/** @type {Module} */
 	const module = {
 		file,
 		dts,
@@ -217,7 +218,7 @@ export function get_dts(file, created, resolve) {
 		};
 	}
 
-	/** @type {import('./types').Module | import('./types').Namespace} */
+	/** @type {Module | Namespace} */
 	let current = module;
 
 	/** @param {ts.Node} node */
@@ -348,9 +349,7 @@ export function get_dts(file, created, resolve) {
 				});
 			}
 
-			const declaration = /** @type {import('./types').Declaration} */ (
-				current.declarations.get(name)
-			);
+			const declaration = /** @type {Declaration} */ (current.declarations.get(name));
 
 			const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
 

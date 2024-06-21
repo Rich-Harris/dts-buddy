@@ -31,7 +31,7 @@ interface ModuleReference {
 	external: boolean;
 }
 
-export interface Module {
+interface Module {
 	file: string;
 	dts: string;
 	ast: SourceFile;
@@ -55,14 +55,16 @@ export interface Module {
 	exports: Map<string, string>;
 }
 
-export interface Namespace {
+interface Namespace {
 	declarations: Map<string, Declaration>;
 	references: Set<string>;
 	exports: Map<string, string>;
 }
 
-export interface Mapping {
+interface Mapping {
 	source: string;
 	line: number;
 	column: number;
 }
+
+export { Binding, Declaration, Mapping, Module, ModuleReference, Namespace };

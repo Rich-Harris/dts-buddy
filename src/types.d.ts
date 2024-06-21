@@ -7,7 +7,7 @@ interface Reference {
 	name: string;
 }
 
-interface Declaration {
+export interface Declaration {
 	module: string;
 	name: string;
 	alias: string;
@@ -20,13 +20,13 @@ interface Declaration {
 	preferred_alias: string;
 }
 
-interface Binding {
+export interface Binding {
 	id: string;
 	external: boolean;
 	name: string;
 }
 
-interface ModuleReference {
+export interface ModuleReference {
 	id: string;
 	external: boolean;
 }

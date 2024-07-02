@@ -1,9 +1,9 @@
 /// <reference types="some-ambient-import" />
 
 declare module 'ambient-imports' {
-	interface Foo {}
+	export interface Foo {}
 
-	export { Foo };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

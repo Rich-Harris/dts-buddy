@@ -1,9 +1,9 @@
 declare module 'const-namespace' {
-	namespace a {
+	export namespace a {
 		const x: number;
 	}
 
-	export { a };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

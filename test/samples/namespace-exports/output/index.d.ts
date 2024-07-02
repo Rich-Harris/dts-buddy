@@ -1,5 +1,5 @@
 declare module 'namespace-exports' {
-	type X = Namespace.X;
+	export type X = Namespace.X;
 	namespace Namespace {
 		interface X {
 			x: string;
@@ -9,7 +9,7 @@ declare module 'namespace-exports' {
 		}
 	}
 
-	export { X };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

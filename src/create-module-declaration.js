@@ -167,9 +167,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 				declaration.alias = get_name(globals.has(name) ? declaration.name : name);
 				mark(declaration);
 
-				export_specifiers.push(
-					declaration.alias === name ? name : `${declaration.alias} as ${name}`
-				);
+				if (declaration.alias !== name) {
+					export_specifiers.push(`${declaration.alias} as ${name}`);
+				} else {
+					declaration.exported = true;
+				}
 			} else {
 				throw new Error('Something strange happened');
 			}
@@ -323,10 +325,15 @@ export function create_module_declaration(id, entry, created, resolve) {
 								}
 							}
 
-							let b = export_modifier.end;
-							const a = b - 6;
-							while (/\s/.test(module.dts[b])) b += 1;
-							result.remove(a, b);
+							if (!exports.has(declaration.alias)) {
+								// remove all export keywords in the initial pass; reinstate as necessary later
+								let b = export_modifier.end;
+								const a = b - 6;
+								while (/\s/.test(module.dts[b])) b += 1;
+								result.remove(a, b);
+							}
+						} else if (declaration.exported) {
+							export_specifiers.push(declaration.alias);
 						}
 					}
 
@@ -391,24 +398,22 @@ export function create_module_declaration(id, entry, created, resolve) {
 			if (mod) content += '\n' + mod;
 		}
 
-		if (export_specifiers.length > 0) {
-			content += `\n\n\texport { ${export_specifiers.join(', ')} };`;
-		}
-
 		// finally, export any bindings that are exported from external modules
-
-		/** @type {string[]} */
-		const specifiers = [];
 
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration?.external) {
-				specifiers.push(declaration.alias);
+				export_specifiers.push(declaration.alias);
 			}
 		}
 
-		if (specifiers.length > 0) {
-			content += `\n\texport { ${specifiers.join(', ')} };`;
+		// Always add an export { .. } statement, even if there are no exports. This ensures
+		// that only the public types are exposed to consumers of the declaration file. Due to some
+		// old TypeScript inconsistency, omitting the export statement would expose all types.
+		if (export_specifiers.length > 0) {
+			content += `\n\n\texport { ${export_specifiers.join(', ')} };`;
+		} else {
+			content += '\n\n\texport {};';
 		}
 
 		content += `\n}`;
@@ -500,6 +505,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 				module: '<builtin>',
 				external: false,
 				included: true,
+				exported: false,
 				name,
 				alias: name,
 				dependencies: [],
@@ -527,6 +533,7 @@ function create_external_declaration(binding, alias) {
 		module: binding.id,
 		name: binding.name,
 		alias: '',
+		exported: false,
 		external: true,
 		included: false,
 		dependencies: [],

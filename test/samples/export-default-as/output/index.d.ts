@@ -2,9 +2,9 @@ declare module 'export-default-as' {
 	/**
 	 * Add two numbers
 	 * */
-	function add(a: number, b: number): number;
+	export function add(a: number, b: number): number;
 
-	export { add };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

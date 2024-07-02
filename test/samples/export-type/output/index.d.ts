@@ -1,8 +1,8 @@
 declare module 'export-type' {
-	type D = {};
-	class B<D> {}
+	export type D = {};
+	export class B<D> {}
 
-	export { B, D };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

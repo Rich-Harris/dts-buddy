@@ -1,22 +1,22 @@
 declare module 'ts' {
 	/** A vector with two components */
-	interface Vector2 {
+	export interface Vector2 {
 		/** The x component */
 		x: number;
 		/** The y component */
 		y: number;
 	}
 	/** A vector with three components */
-	interface Vector3 extends Vector2 {
+	export interface Vector3 extends Vector2 {
 		/** The z component */
 		z: number;
 	}
 	/**
 	 * Add two vectors
 	 */
-	function add(a: Vector2, b: Vector2): Vector2;
+	export function add(a: Vector2, b: Vector2): Vector2;
 
-	export { Vector2, Vector3, add };
+	export {};
 }
 
 declare module 'ts/subpackage' {
@@ -24,9 +24,9 @@ declare module 'ts/subpackage' {
 	/**
 	 * Multiply two vectors
 	 */
-	function multiply(a: Vector2, b: Vector2): Vector2;
+	export function multiply(a: Vector2, b: Vector2): Vector2;
 
-	export { multiply };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

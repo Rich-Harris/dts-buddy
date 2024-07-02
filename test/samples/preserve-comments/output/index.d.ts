@@ -2,9 +2,7 @@ declare module 'preserve-comments' {
 	/**
 	 * @deprecated
 	 */
-	function a(): number;
-
-	export { a };
+	export function a(): number;
 }
 
 //# sourceMappingURL=index.d.ts.map

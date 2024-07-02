@@ -2,9 +2,7 @@ declare module 'export-named-as' {
 	/**
 	 * Add two numbers
 	 * */
-	function plus(a: number, b: number): number;
-
-	export { plus };
+	export function plus(a: number, b: number): number;
 }
 
 //# sourceMappingURL=index.d.ts.map

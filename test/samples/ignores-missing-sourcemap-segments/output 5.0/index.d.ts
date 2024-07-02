@@ -1,10 +1,8 @@
 declare module 'ignores-missing-sourcemap-segments' {
-	function hello(): void;
-	namespace object {
+	export function hello(): void;
+	export namespace object {
 		const answer: number;
 	}
-
-	export { hello, object };
 }
 
 //# sourceMappingURL=index.d.ts.map

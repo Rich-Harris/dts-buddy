@@ -11,6 +11,7 @@ interface Declaration {
 	module: string;
 	name: string;
 	alias: string;
+	exported: boolean;
 	external: boolean;
 	included: boolean;
 	dependencies: Reference[];

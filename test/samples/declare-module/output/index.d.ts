@@ -1,7 +1,5 @@
 declare module 'declare-module' {
-	interface Foo {}
-
-	export { Foo };
+	export interface Foo {}
 }
 
 //# sourceMappingURL=index.d.ts.map

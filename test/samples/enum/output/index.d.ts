@@ -4,6 +4,8 @@ declare module 'enum' {
 		VEGETABLE = 1,
 		MINERAL = 2
 	}
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

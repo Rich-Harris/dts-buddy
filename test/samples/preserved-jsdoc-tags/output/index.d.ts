@@ -6,6 +6,8 @@ declare module 'preserved-jsdoc-tags' {
 	 * const three = add(1, 2);
 	 * */
 	export function add(a: number, b: number): number;
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

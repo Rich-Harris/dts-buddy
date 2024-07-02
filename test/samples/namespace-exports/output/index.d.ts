@@ -8,6 +8,8 @@ declare module 'namespace-exports' {
 			y: string;
 		}
 	}
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

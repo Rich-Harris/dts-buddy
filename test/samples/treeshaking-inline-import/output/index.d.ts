@@ -10,6 +10,8 @@ declare module 'treeshaking-inline-import' {
 		/** The y component */
 		y: number;
 	}
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

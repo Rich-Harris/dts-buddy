@@ -398,24 +398,22 @@ export function create_module_declaration(id, entry, created, resolve) {
 			if (mod) content += '\n' + mod;
 		}
 
-		if (export_specifiers.length > 0) {
-			content += `\n\n\texport { ${export_specifiers.join(', ')} };`;
-		}
-
 		// finally, export any bindings that are exported from external modules
-
-		/** @type {string[]} */
-		const specifiers = [];
 
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration?.external) {
-				specifiers.push(declaration.alias);
+				export_specifiers.push(declaration.alias);
 			}
 		}
 
-		if (specifiers.length > 0) {
-			content += `\n\texport { ${specifiers.join(', ')} };`;
+		// Always add an export { .. } statement, even if there are no exports. This ensures
+		// that only the public types are exposed to consumers of the declaration file. Due to some
+		// old TypeScript inconsistency, omitting the export statement would expose all types.
+		if (export_specifiers.length > 0) {
+			content += `\n\n\texport { ${export_specifiers.join(', ')} };`;
+		} else {
+			content += '\n\n\texport {};';
 		}
 
 		content += `\n}`;

@@ -12,6 +12,8 @@ declare module 'path-config' {
 	type Input = number;
 	type Output = number;
 	export function foo_nested(input: Input): Output;
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

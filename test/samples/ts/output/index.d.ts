@@ -15,6 +15,8 @@ declare module 'ts' {
 	 * Add two vectors
 	 */
 	export function add(a: Vector2, b: Vector2): Vector2;
+
+	export {};
 }
 
 declare module 'ts/subpackage' {
@@ -23,6 +25,8 @@ declare module 'ts/subpackage' {
 	 * Multiply two vectors
 	 */
 	export function multiply(a: Vector2, b: Vector2): Vector2;
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

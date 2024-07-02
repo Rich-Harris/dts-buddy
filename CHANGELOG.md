@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.5.1
+
+- Use more TypeScript-friendly way of preventing unintended exports ([#85](https://github.com/Rich-Harris/dts-buddy/pull/85))
+
 ## 0.5.0
 
 - Prevent unintended exports ([#82](https://github.com/Rich-Harris/dts-buddy/pull/82))

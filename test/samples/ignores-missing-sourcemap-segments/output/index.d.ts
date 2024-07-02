@@ -3,6 +3,8 @@ declare module 'ignores-missing-sourcemap-segments' {
 	export namespace object {
 		let answer: number;
 	}
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

@@ -5,6 +5,8 @@ declare module 'overloads' {
 	}
 	export function baz(input: Foo): Foo;
 	export function baz(input: Bar): Bar;
+
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

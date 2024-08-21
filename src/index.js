@@ -229,7 +229,8 @@ export async function createBundle(options) {
 				id,
 				modules[id],
 				created,
-				resolve
+				resolve,
+				compilerOptions
 			);
 
 			types += content;

@@ -1,6 +1,6 @@
 {
 	"name": "dts-buddy",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "A tool for creating .d.ts bundles",
 	"repository": {
 		"type": "git",

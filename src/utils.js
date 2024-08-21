@@ -17,6 +17,21 @@ export function get_jsdoc(node) {
 }
 
 /** @param {ts.Node} node */
+export function is_internal(node) {
+	const jsdoc = get_jsdoc(node);
+
+	if (jsdoc) {
+		for (const jsDoc of jsdoc) {
+			if (jsDoc.tags?.some((tag) => tag.tagName.escapedText === 'internal')) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/** @param {ts.Node} node */
 export function get_jsdoc_imports(node) {
 	/** @type {import('typescript').TypeNode[]} */
 	const imports = [];
@@ -180,8 +195,9 @@ export function write(file, contents) {
  * @param {string} file
  * @param {Record<string, string>} created
  * @param {(file: string, specifier: string) => string | null} resolve
+ * @param {{ stripInternal?: boolean }} options
  */
-export function get_dts(file, created, resolve) {
+export function get_dts(file, created, resolve, options) {
 	const dts = created[file] ?? fs.readFileSync(file, 'utf8');
 	const ast = ts.createSourceFile(file, dts, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 	const locator = getLocator(dts, { offsetLine: 1 });
@@ -325,6 +341,8 @@ export function get_dts(file, created, resolve) {
 		}
 
 		if (is_declaration(node)) {
+			if (is_internal(node) && options.stripInternal) return;
+
 			const identifier = ts.isVariableStatement(node)
 				? ts.getNameOfDeclaration(node.declarationList.declarations[0])
 				: ts.getNameOfDeclaration(node);
@@ -383,6 +401,10 @@ export function get_dts(file, created, resolve) {
 				current = previous;
 			} else {
 				walk(node, (node) => {
+					if (ts.isPropertySignature(node) && is_internal(node) && options.stripInternal) {
+						return false;
+					}
+
 					// `import('./foo').Foo` -> `Foo`
 					if (
 						ts.isImportTypeNode(node) &&
@@ -466,11 +488,13 @@ export function resolve_dts(from, to) {
 
 /**
  * @param {ts.Node} node
- * @param {(node: ts.Node) => void} callback
+ * @param {(node: ts.Node) => void | false} callback
  */
 export function walk(node, callback) {
-	callback(node);
-	ts.forEachChild(node, (child) => walk(child, callback));
+	const go_on = callback(node);
+	if (go_on !== false) {
+		ts.forEachChild(node, (child) => walk(child, callback));
+	}
 }
 
 /**

@@ -3,20 +3,29 @@ import path from 'node:path';
 import ts from 'typescript';
 import * as tsu from 'ts-api-utils';
 import MagicString from 'magic-string';
-import { clean_jsdoc, get_dts, is_declaration, is_reference, resolve_dts, walk } from './utils.js';
+import {
+	clean_jsdoc,
+	get_dts,
+	is_declaration,
+	is_internal,
+	is_reference,
+	resolve_dts,
+	walk
+} from './utils.js';
 
 /**
  * @param {string} id
  * @param {string} entry
  * @param {Record<string, string>} created
  * @param {(file: string, specifier: string) => string | null} resolve
+ * @param {{ stripInternal?: boolean }} options
  * @returns {{
  *   content: string;
  *   mappings: Map<string, Mapping>;
  *   ambient: ModuleReference[];
  * }}
  */
-export function create_module_declaration(id, entry, created, resolve) {
+export function create_module_declaration(id, entry, created, resolve, options) {
 	let content = '';
 
 	/** @type {Map<string, Mapping>} */
@@ -57,7 +66,7 @@ export function create_module_declaration(id, entry, created, resolve) {
 		const included = new Set([entry]);
 
 		for (const file of included) {
-			const module = get_dts(file, created, resolve);
+			const module = get_dts(file, created, resolve, options);
 
 			for (const name of module.globals) {
 				globals.add(name);
@@ -247,6 +256,10 @@ export function create_module_declaration(id, entry, created, resolve) {
 				}
 
 				if (is_declaration(node)) {
+					if (is_internal(node) && options.stripInternal) {
+						result.remove(node.pos, node.end);
+					}
+
 					const identifier = ts.isVariableStatement(node)
 						? ts.getNameOfDeclaration(node.declarationList.declarations[0])
 						: ts.getNameOfDeclaration(node);
@@ -348,6 +361,11 @@ export function create_module_declaration(id, entry, created, resolve) {
 					}
 
 					walk(node, (node) => {
+						if (ts.isPropertySignature(node) && is_internal(node) && options.stripInternal) {
+							result.remove(node.pos, node.end);
+							return false;
+						}
+
 						if (is_reference(node)) {
 							const name = node.getText(module.ast);
 

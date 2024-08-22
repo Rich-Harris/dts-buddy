@@ -366,9 +366,11 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 							return false;
 						}
 
-						if (is_reference(node)) {
+						// We need to include the declarations because if references to them have changed, we need to update the declarations, too
+						if (is_reference(node, true)) {
 							const name = node.getText(module.ast);
 
+							// TODO we shouldn't be in here for non-top level ts.QualifiedName nodes
 							const declaration = trace(module.file, name);
 
 							if (

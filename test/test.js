@@ -20,7 +20,10 @@ for (const sample of fs.readdirSync('test/samples')) {
 
 		const compilerOptions = {
 			/** @type {Record<string, string[]>} */
-			paths: {}
+			paths: {},
+			...(fs.existsSync(`${dir}/options.json`)
+				? JSON.parse(fs.readFileSync(`${dir}/options.json`, 'utf-8'))
+				: {})
 		};
 
 		for (const file of glob('**', { cwd: `${dir}/input`, filesOnly: true })) {

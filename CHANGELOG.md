@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.5.2
+
+- Support stripping internal types using `@internal` JSDoc tags ([#87](https://github.com/Rich-Harris/dts-buddy/pull/87))
+
 ## 0.5.1
 
 - Use more TypeScript-friendly way of preventing unintended exports ([#85](https://github.com/Rich-Harris/dts-buddy/pull/85))

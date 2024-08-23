@@ -12,5 +12,6 @@
 		"paths": {
 			"#lib": ["./samples/path-config/input/lib.d.ts"]
 		}
-	}
+	},
+	"exclude": ["**/actual/"]
 }

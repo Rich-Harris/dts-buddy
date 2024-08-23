@@ -550,12 +550,6 @@ export function is_reference(node, include_declarations = false) {
 
 	if (node.parent) {
 		if (is_declaration(node.parent)) {
-			// TODO is this even necessary? The node can't be the child of a declaration because it's the child of the variable statement already
-			// if (include_declarations && ts.isVariableStatement(node.parent)) {
-			// return node.parent.declarationList.declarations.some((declaration) => {
-			// 	return declaration.name === node;
-			// });
-			// }
 			if (ts.isVariableStatement(node.parent)) {
 				return false;
 			}
@@ -576,6 +570,11 @@ export function is_reference(node, include_declarations = false) {
 		if (ts.isBreakOrContinueStatement(node.parent)) return false;
 		if (ts.isEnumMember(node.parent)) return false;
 		if (ts.isModuleDeclaration(node.parent)) return false;
+
+		// Only X in X.Y.Z is a reference we care about
+		if (ts.isQualifiedName(node.parent)) {
+			return node.parent.left === node && ts.isIdentifier(node.parent.right);
+		}
 
 		// `const = { x: 1 }` inexplicably becomes `namespace a { let x: number; }`
 		if (ts.isVariableDeclaration(node.parent)) {

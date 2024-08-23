@@ -15,7 +15,8 @@ interface Declaration {
 	external: boolean;
 	included: boolean;
 	dependencies: Reference[];
-	/** The name we'd like to use to refer to this binding.
+	/**
+	 * The name we'd like to use to refer to this binding.
 	 * Only applies to default imports from external modules
 	 */
 	preferred_alias: string;

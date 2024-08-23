@@ -239,6 +239,24 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 			const index = module.dts.indexOf('//# sourceMappingURL=');
 			if (index !== -1) result.remove(index, module.dts.length);
 
+			if (module.import_all.size > 0) {
+				// remove the leading `Foo.` from references to `import * as Foo` namespace imports
+				walk(module.ast, (node) => {
+					if (is_reference(node) && ts.isQualifiedName(node.parent)) {
+						const binding = module.import_all.get(node.getText(module.ast));
+						if (binding) {
+							result.remove(node.pos, result.original.indexOf('.', node.end) + 1);
+							const declaration = bundle
+								.get(binding.id)
+								?.declarations.get(node.parent.right.getText(module.ast));
+							if (declaration?.alias) {
+								result.overwrite(node.parent.right.pos, node.parent.right.end, declaration.alias);
+							}
+						}
+					}
+				});
+			}
+
 			ts.forEachChild(module.ast, (node) => {
 				if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
 					result.remove(node.pos, node.end);
@@ -366,7 +384,8 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 							return false;
 						}
 
-						if (is_reference(node)) {
+						// We need to include the declarations because if references to them have changed, we need to update the declarations, too
+						if (is_reference(node, true)) {
 							const name = node.getText(module.ast);
 
 							const declaration = trace(module.file, name);

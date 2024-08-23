@@ -1,4 +1,4 @@
-/** @import { Declaration, Module, Namespace } from './types' */
+/** @import { Binding, Declaration, Module, Namespace } from './types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
@@ -388,13 +388,29 @@ export function get_dts(file, created, resolve, options) {
 
 			if (tsu.isNamespaceDeclaration(node)) {
 				const previous = current;
-				current = { declarations: new Map(), references: new Set(), exports: new Map() };
+				current = {
+					declarations: new Map(),
+					references: new Set(),
+					exports: new Map()
+				};
 
 				node.body.forEachChild(scan);
 
 				for (const name of current.references) {
 					if (!current.declarations.has(name)) {
 						previous.references.add(name);
+					}
+				}
+
+				for (const inner of current.declarations.values()) {
+					for (const inner_dep of inner.dependencies) {
+						if (
+							!declaration.dependencies.some(
+								(dep) => dep.name === inner_dep.name && dep.module === inner_dep.module
+							)
+						) {
+							declaration.dependencies.push(inner_dep);
+						}
 					}
 				}
 
@@ -417,9 +433,15 @@ export function get_dts(file, created, resolve, options) {
 							module.dependencies.push(resolved);
 
 							if (node.qualifier) {
+								// In the case of `import('./foo').Foo.Bar`, this contains `Foo.Bar`,
+								// but we only want `Foo` (because we don't traverse into namespaces)
+								let id = node.qualifier;
+								while (ts.isQualifiedName(id)) {
+									id = id.left;
+								}
 								declaration.dependencies.push({
 									module: resolved ?? node.argument.literal.text,
-									name: node.qualifier.getText(module.ast)
+									name: id.getText(module.ast)
 								});
 							}
 						}
@@ -432,10 +454,18 @@ export function get_dts(file, created, resolve, options) {
 						current.references.add(name);
 
 						if (name !== declaration.name) {
-							declaration.dependencies.push({
-								module: file,
-								name
-							});
+							// If this references an import * as X statement, we add a dependency to Y of the X.Y access
+							if (module.import_all.has(name) && ts.isQualifiedName(node.parent)) {
+								declaration.dependencies.push({
+									module: /** @type {Binding} */ (module.import_all.get(name)).id,
+									name: node.parent.right.getText(module.ast)
+								});
+							} else {
+								declaration.dependencies.push({
+									module: file,
+									name
+								});
+							}
 						}
 					}
 				});
@@ -523,23 +553,25 @@ export function is_declaration(node) {
 
 /**
  * @param {ts.Node} node
+ * @param {boolean} [include_declarations]
  * @returns {node is ts.Identifier}
  */
-export function is_reference(node) {
+export function is_reference(node, include_declarations = false) {
 	if (!ts.isIdentifier(node)) return false;
 
 	if (node.parent) {
 		if (is_declaration(node.parent)) {
 			if (ts.isVariableStatement(node.parent)) {
-				return node === node.parent.declarationList.declarations[0].name;
+				return false;
 			}
 
-			return node === node.parent.name;
+			return include_declarations && node.parent.name === node;
 		}
 
 		if (ts.isPropertyAccessExpression(node.parent)) return node === node.parent.expression;
 		if (ts.isPropertyDeclaration(node.parent)) return node === node.parent.initializer;
 		if (ts.isPropertyAssignment(node.parent)) return node === node.parent.initializer;
+		if (ts.isMethodSignature(node.parent)) return node !== node.parent.name;
 
 		if (ts.isImportTypeNode(node.parent)) return false;
 		if (ts.isPropertySignature(node.parent)) return false;
@@ -548,6 +580,12 @@ export function is_reference(node) {
 		if (ts.isLabeledStatement(node.parent)) return false;
 		if (ts.isBreakOrContinueStatement(node.parent)) return false;
 		if (ts.isEnumMember(node.parent)) return false;
+		if (ts.isModuleDeclaration(node.parent)) return false;
+
+		// Only X in X.Y.Z is a reference we care about
+		if (ts.isQualifiedName(node.parent)) {
+			return node.parent.left === node && ts.isIdentifier(node.parent.right);
+		}
 
 		// `const = { x: 1 }` inexplicably becomes `namespace a { let x: number; }`
 		if (ts.isVariableDeclaration(node.parent)) {

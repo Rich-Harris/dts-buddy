@@ -8,6 +8,14 @@ declare module 'namespace-exports' {
 			y: string;
 		}
 	}
+	export namespace NamespaceWithDeps {
+		interface Z {
+			z: Dependency;
+		}
+	}
+	interface Dependency {
+		name: string;
+	}
 
 	export {};
 }

@@ -3,15 +3,19 @@
 	"file": "index.d.ts",
 	"names": [
 		"X",
-		"Namespace"
+		"Namespace",
+		"NamespaceWithDeps",
+		"Dependency"
 	],
 	"sources": [
 		"../input/index.ts",
-		"../input/namespace.ts"
+		"../input/namespace.ts",
+		"../input/dependency.ts"
 	],
 	"sourcesContent": [
 		null,
+		null,
 		null
 	],
-	"mappings": ";aAEYA,CAACA;WCFIC,SAASA"
+	"mappings": ";aAEYA,CAACA;WCAIC,SAASA;;;;;;;;kBAUTC,iBAAiBA;;;;;WCZjBC,UAAUA"
 }

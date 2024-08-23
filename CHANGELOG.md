@@ -1,5 +1,11 @@
 # dts-buddy changelog
 
+## 0.5.3
+
+- Support `import * as X` imports ([#89](https://github.com/Rich-Harris/dts-buddy/pull/89))
+- Fix deduplication logic to rename exports in fewer cases ([#89](https://github.com/Rich-Harris/dts-buddy/pull/89))
+- Recognize import dependencies within namespaces ([#89](https://github.com/Rich-Harris/dts-buddy/pull/89))
+
 ## 0.5.2
 
 - Support stripping internal types using `@internal` JSDoc tags ([#87](https://github.com/Rich-Harris/dts-buddy/pull/87))

@@ -1,4 +1,4 @@
-/** @import { Declaration, Module, Namespace } from './types' */
+/** @import { Binding, Declaration, Module, Namespace } from './types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
@@ -433,10 +433,15 @@ export function get_dts(file, created, resolve, options) {
 							module.dependencies.push(resolved);
 
 							if (node.qualifier) {
+								// In the case of `import('./foo').Foo.Bar`, this contains `Foo.Bar`,
+								// but we only want `Foo` (because we don't traverse into namespaces)
+								let id = node.qualifier;
+								while (ts.isQualifiedName(id)) {
+									id = id.left;
+								}
 								declaration.dependencies.push({
 									module: resolved ?? node.argument.literal.text,
-									// TODO in the case of `import('./foo').Foo.Bar`, this contains `Foo.Bar`, and we currently don't properly handle that AFAIK
-									name: node.qualifier.getText(module.ast)
+									name: id.getText(module.ast)
 								});
 							}
 						}
@@ -448,13 +453,19 @@ export function get_dts(file, created, resolve, options) {
 
 						current.references.add(name);
 
-						// TODO: handle ts.isQualifiedName(node) and check if topmost is a import * as x import, in which case we need to remove x
-
 						if (name !== declaration.name) {
-							declaration.dependencies.push({
-								module: file,
-								name
-							});
+							// If this references an import * as X statement, we add a dependency to Y of the X.Y access
+							if (module.import_all.has(name) && ts.isQualifiedName(node.parent)) {
+								declaration.dependencies.push({
+									module: /** @type {Binding} */ (module.import_all.get(name)).id,
+									name: node.parent.right.getText(module.ast)
+								});
+							} else {
+								declaration.dependencies.push({
+									module: file,
+									name
+								});
+							}
 						}
 					}
 				});

@@ -20,7 +20,7 @@
 		"ts-api-utils": "^1.0.3"
 	},
 	"peerDependencies": {
-		"typescript": ">=5.0.4 <5.6"
+		"typescript": ">=5.0.4 <5.7"
 	},
 	"devDependencies": {
 		"@types/globrex": "^0.1.2",

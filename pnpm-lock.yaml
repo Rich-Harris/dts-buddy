@@ -34,7 +34,7 @@ importers:
         version: 0.2.9
       ts-api-utils:
         specifier: ^1.0.3
-        version: 1.0.3(typescript@5.5.2)
+        version: 1.0.3(typescript@5.7.2)
     devDependencies:
       '@types/globrex':
         specifier: ^0.1.2
@@ -52,8 +52,8 @@ importers:
         specifier: ^7.5.4
         version: 7.5.4
       typescript:
-        specifier: ~5.5.2
-        version: 5.5.2
+        specifier: ~5.7.2
+        version: 5.7.2
       uvu:
         specifier: ^0.5.6
         version: 0.5.6
@@ -146,8 +146,8 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
-  typescript@5.5.2:
-    resolution: {integrity: sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==}
+  typescript@5.7.2:
+    resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -231,11 +231,11 @@ snapshots:
       globalyzer: 0.1.0
       globrex: 0.1.2
 
-  ts-api-utils@1.0.3(typescript@5.5.2):
+  ts-api-utils@1.0.3(typescript@5.7.2):
     dependencies:
-      typescript: 5.5.2
+      typescript: 5.7.2
 
-  typescript@5.5.2: {}
+  typescript@5.7.2: {}
 
   undici-types@5.25.3: {}
 

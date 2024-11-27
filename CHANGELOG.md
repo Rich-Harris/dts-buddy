@@ -1,5 +1,9 @@
 # dts-buddy changelog
 
+## 0.5.4
+
+- Support TypeScript 5.6 and 5.7 ([#91](https://github.com/Rich-Harris/dts-buddy/pull/91))
+
 ## 0.5.3
 
 - Support `import * as X` imports ([#89](https://github.com/Rich-Harris/dts-buddy/pull/89))

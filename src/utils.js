@@ -1,8 +1,7 @@
 /** @import { Binding, Declaration, Module, Namespace } from './types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import glob from 'tiny-glob/sync.js';
-import globrex from 'globrex';
+import { globSync } from 'tinyglobby';
 import ts from 'typescript';
 import * as tsu from 'ts-api-utils';
 import { getLocator } from 'locate-character';
@@ -158,10 +157,10 @@ export function get_input_files(cwd, include, exclude) {
 	const included = new Set();
 
 	for (const pattern of include) {
-		for (const file of glob(pattern, { cwd })) {
+		for (const file of globSync(pattern, { cwd })) {
 			const resolved = path.resolve(cwd, file);
 			if (fs.statSync(resolved).isDirectory()) {
-				for (const file of glob('**/*.{js,jsx,ts,tsx}', { cwd: resolved })) {
+				for (const file of globSync('**/*.{js,jsx,ts,tsx}', { cwd: resolved, ignore: exclude })) {
 					included.add(path.resolve(resolved, file));
 				}
 			} else {
@@ -170,14 +169,7 @@ export function get_input_files(cwd, include, exclude) {
 		}
 	}
 
-	let input = Array.from(included);
-
-	for (const pattern of exclude) {
-		const { regex } = globrex(pattern, { globstar: true });
-		input = input.filter((file) => !regex.test(file));
-	}
-
-	return input.map((file) => path.resolve(file));
+	return Array.from(included).map((file) => path.resolve(file));
 }
 
 /**

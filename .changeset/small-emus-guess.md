@@ -2,4 +2,4 @@
 'dts-buddy': patch
 ---
 
-feat: upgrade to tinnyglobby
+feat: upgrade to tinyglobby

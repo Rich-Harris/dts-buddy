@@ -23,15 +23,18 @@
 		"typescript": ">=5.0.4 <5.8"
 	},
 	"devDependencies": {
+		"@changesets/cli": "^2.28.1",
 		"@types/globrex": "^0.1.2",
 		"@types/node": "^20.7.2",
 		"@types/semver": "^7.5.3",
 		"prettier": "^3.0.3",
 		"semver": "^7.5.4",
-		"typescript": "~5.7.2",
+		"typescript": "~5.7.3",
 		"uvu": "^0.5.6"
 	},
 	"scripts": {
+		"changeset:version": "changeset version",
+		"changeset:publish": "changeset publish",
 		"prepublishOnly": "node src/cli.js --debug debug && tsc types/index.d.ts --esModuleInterop",
 		"test": "node test/test.js",
 		"check": "tsc --noEmit --emitDeclarationOnly false",

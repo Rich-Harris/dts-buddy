@@ -26,6 +26,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 				: {})
 		};
 
+		console.log({ compilerOptions });
+
 		for (const file of glob('**', { cwd: `${dir}/input`, filesOnly: true })) {
 			const parts = file.split(/[\/\\]/);
 			const basename = parts.pop();

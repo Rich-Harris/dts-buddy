@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import glob from 'tiny-glob/sync.js';
+import { globSync } from 'tinyglobby';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { createBundle } from '../src/index.js';
@@ -26,7 +26,7 @@ for (const sample of fs.readdirSync('test/samples')) {
 				: {})
 		};
 
-		for (const file of glob('**', { cwd: `${dir}/input`, filesOnly: true })) {
+		for (const file of globSync('**', { cwd: `${dir}/input`, onlyFiles: true })) {
 			const parts = file.split(/[\/\\]/);
 			const basename = parts.pop();
 
@@ -60,8 +60,8 @@ for (const sample of fs.readdirSync('test/samples')) {
 			}
 		}
 
-		const actual = glob('**', { cwd: `${dir}/actual`, filesOnly: true }).sort();
-		const output = glob('**', { cwd: `${dir}/${output_dir}`, filesOnly: true }).sort();
+		const actual = globSync('**', { cwd: `${dir}/actual`, onlyFiles: true }).sort();
+		const output = globSync('**', { cwd: `${dir}/${output_dir}`, onlyFiles: true }).sort();
 
 		assert.equal(actual, output);
 

@@ -2,4 +2,4 @@
 'dts-buddy': patch
 ---
 
-feat: support `export { ... as default} from ...`
+feat: support `export { ... as default } from ...`

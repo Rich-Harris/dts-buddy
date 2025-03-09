@@ -1,5 +1,5 @@
 ---
-"dts-buddy": patch
+'dts-buddy': patch
 ---
 
 feat: support `export { ... as default} from ...`

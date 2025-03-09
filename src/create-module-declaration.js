@@ -294,26 +294,44 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 						return;
 					}
 
+					// `declare` might be removed there or in the next branch, make it variable
+					let declare_modifier = node.modifiers?.find((node) => tsu.isDeclareKeyword(node));
+
 					const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
 					if (declaration.alias === 'default') {
-						const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
-						if (export_modifier && !default_modifier) {
-							// Insert `export **default** ...` to exports that are renamed to `default` by another file:
-							// foo.js:   export function foo() {}
-							// index.js  export { foo as default } from './foo.js'
-							result.appendRight(export_modifier.end, ' default');
+						// Exports that are renamed to `default` by another file:
+						// foo.js:   export function foo() {}
+						// index.js  export { foo as default } from './foo.js'
 
-							if (identifier) {
-								const pos = identifier.getStart(module.ast);
-								const loc = module.locator(pos);
-								if (loc) {
-									const mapping = {
-										source: module.file,
-										line: loc.line,
-										column: loc.column
-									};
-									mappings.set(name, mapping);
-								}
+						let createMapping = false; // Flag to register a mapping
+
+						const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
+						if (!default_modifier && export_modifier) {
+							// Insert `default` after `export` if `export` is there
+							result.appendRight(export_modifier.end, ' default');
+							createMapping = true;
+						} else if (!default_modifier && declare_modifier && ts.isFunctionDeclaration(node)) {
+							// Replace `declare function` with `export default function` if neither `export` nor
+							// `default` are there
+							result.overwrite(
+								node.getStart(undefined, false),
+								declare_modifier.end,
+								'export default'
+							);
+							declare_modifier = undefined;
+							createMapping = true;
+						}
+
+						if (identifier && createMapping) {
+							const pos = identifier.getStart(module.ast);
+							const loc = module.locator(pos);
+							if (loc) {
+								const mapping = {
+									source: module.file,
+									line: loc.line,
+									column: loc.column
+								};
+								mappings.set(name, mapping);
 							}
 						}
 					} else {
@@ -388,7 +406,6 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 						}
 					}
 
-					const declare_modifier = node.modifiers?.find((node) => tsu.isDeclareKeyword(node));
 					if (declare_modifier) {
 						// i'm not sure why typescript turns `export function` in a .ts file to `export declare function`,
 						// but it's weird and we don't want it

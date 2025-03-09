@@ -303,13 +303,13 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 						// foo.js:   export function foo() {}
 						// index.js  export { foo as default } from './foo.js'
 
-						let createMapping = false; // Flag to register a mapping
+						let create_mapping = false; // Flag to register a mapping if we updated the code
 
 						const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
 						if (!default_modifier && export_modifier) {
 							// Insert `default` after `export` if `export` is there
 							result.appendRight(export_modifier.end, ' default');
-							createMapping = true;
+							create_mapping = true;
 						} else if (!default_modifier && declare_modifier && ts.isFunctionDeclaration(node)) {
 							// Replace `declare function` with `export default function` if neither `export` nor
 							// `default` are there
@@ -319,10 +319,10 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 								'export default'
 							);
 							declare_modifier = undefined;
-							createMapping = true;
+							create_mapping = true;
 						}
 
-						if (identifier && createMapping) {
+						if (identifier && create_mapping) {
 							const pos = identifier.getStart(module.ast);
 							const loc = module.locator(pos);
 							if (loc) {

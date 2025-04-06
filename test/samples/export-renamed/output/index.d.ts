@@ -1,7 +1,7 @@
 declare module 'export-renamed' {
-	const answer: 42;
+	export const answer: 42;
 
-	export { answer };
+	export {};
 }
 
 //# sourceMappingURL=index.d.ts.map

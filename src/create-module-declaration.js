@@ -56,7 +56,7 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 	const exports = new Set();
 
 	/** @type {Set<string>} */
-	const globals = new Set();
+	const reserved = new Set(['default']);
 
 	/** @type {string[]} */
 	const export_specifiers = [];
@@ -69,7 +69,7 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 			const module = get_dts(file, created, resolve, options);
 
 			for (const name of module.globals) {
-				globals.add(name);
+				reserved.add(name);
 			}
 
 			for (const dep of module.dependencies) {
@@ -139,7 +139,7 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 	// step 2 - treeshaking
 	{
 		/** @type {Set<string>} */
-		const names = new Set(globals);
+		const names = new Set(reserved);
 
 		/** @type {Set<Declaration>} */
 		const declarations = new Set();
@@ -173,13 +173,16 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 		for (const name of exports) {
 			const declaration = trace_export(entry, name);
 			if (declaration) {
-				declaration.alias = get_name(globals.has(name) ? declaration.name : name);
+				declaration.alias = get_name(reserved.has(name) ? declaration.name : name);
 				mark(declaration);
 
-				if (declaration.alias !== name) {
+				if (name === 'default') {
+					declaration.default = true;
+					declaration.exported = true;
+				} else if (declaration.alias !== name) {
 					export_specifiers.push(`${declaration.alias} as ${name}`);
 				} else {
-					declaration.exported = true;
+					declaration.exported = true; // TODO can we just always mark it as exported?
 				}
 			} else {
 				throw new Error('Something strange happened');
@@ -258,7 +261,11 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 			}
 
 			ts.forEachChild(module.ast, (node) => {
-				if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+				if (
+					ts.isImportDeclaration(node) ||
+					ts.isExportDeclaration(node) ||
+					ts.isExportAssignment(node)
+				) {
 					result.remove(node.pos, node.end);
 					return;
 				}
@@ -273,194 +280,139 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 					return;
 				}
 
-				if (is_declaration(node)) {
-					if (is_internal(node) && options.stripInternal) {
-						result.remove(node.pos, node.end);
-					}
+				if (!is_declaration(node)) {
+					return;
+				}
 
-					const identifier = ts.isVariableStatement(node)
+				if (is_internal(node) && options.stripInternal) {
+					result.remove(node.pos, node.end);
+				}
+
+				const identifier = /** @type {ts.DeclarationName} */ (
+					ts.isVariableStatement(node)
 						? ts.getNameOfDeclaration(node.declarationList.declarations[0])
-						: ts.getNameOfDeclaration(node);
+						: ts.getNameOfDeclaration(node)
+				);
 
-					const name = identifier?.getText(module.ast);
-					if (!name) {
-						throw new Error('TODO');
-					}
+				const name = identifier.getText(module.ast);
 
-					const declaration = /** @type {Declaration} */ (module.declarations.get(name));
+				const declaration = /** @type {Declaration} */ (module.declarations.get(name));
 
-					if (!declaration.included) {
-						result.remove(node.pos, node.end);
-						return;
-					}
+				if (!declaration.included) {
+					result.remove(node.pos, node.end);
+					return;
+				}
 
-					// `declare` might be removed there or in the next branch, make it variable
-					let declare_modifier = node.modifiers?.find((node) => tsu.isDeclareKeyword(node));
+				// special case — TS turns `export default 42` into `const _default: 42; export default _default` —
+				// the `export default` assignment is already taken care of, we just need to remove the `const _default:`
+				if (declaration.default && ts.isVariableStatement(node)) {
+					result.remove(
+						node.getStart(),
+						/** @type {ts.TypeNode} */ (node.declarationList.declarations[0].type).getStart()
+					);
+				}
 
-					const export_modifier = node.modifiers?.find((node) => tsu.isExportKeyword(node));
-					if (declaration.alias === 'default') {
-						// Exports that are renamed to `default` by another file:
-						// foo.js:   export function foo() {}
-						// index.js  export { foo as default } from './foo.js'
+				const modifiers = declaration.default
+					? 'export default '
+					: declaration.exported
+					? 'export '
+					: '';
 
-						let create_mapping = false; // Flag to register a mapping if we updated the code
+				if (node.modifiers) {
+					let end = node.modifiers[node.modifiers.length - 1].end;
+					while (/\s/.test(result.original[end])) end += 1;
+					result.overwrite(node.getStart(), end, modifiers);
+				} else if (modifiers) {
+					result.prependRight(node.getStart(), modifiers);
+				}
 
-						const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
-						if (!default_modifier && export_modifier) {
-							// Insert `default` after `export` if `export` is there
-							result.appendRight(export_modifier.end, ' default');
-							create_mapping = true;
-						} else if (!default_modifier && declare_modifier && ts.isFunctionDeclaration(node)) {
-							// Replace `declare function` with `export default function` if neither `export` nor
-							// `default` are there
-							result.overwrite(
-								node.getStart(undefined, false),
-								declare_modifier.end,
-								'export default'
-							);
-							declare_modifier = undefined;
-							create_mapping = true;
-						}
+				const pos = identifier.getStart(module.ast);
+				const loc = module.locator(pos);
 
-						if (identifier && create_mapping) {
-							const pos = identifier.getStart(module.ast);
-							const loc = module.locator(pos);
-							if (loc) {
+				if (loc) {
+					// the sourcemaps generated by TypeScript are very inaccurate, borderline useless.
+					// we need to fix them up here. TODO is it only inaccurate in the JSDoc case?
+					const segments = module.source?.mappings?.[loc.line - 1];
+
+					if (module.source && segments) {
+						// find the segments immediately before and after the generated column
+						const index = segments.findIndex((segment) => segment[0] >= loc.column);
+
+						const a = segments[index - 1] ?? segments[0];
+						if (a) {
+							let l = /** @type {number} */ (a[2]);
+
+							const source_line = module.source.code.split('\n')[l];
+							const regex = new RegExp(`\\b${name}\\b`);
+							const match = regex.exec(source_line);
+
+							if (match) {
 								const mapping = {
-									source: module.file,
-									line: loc.line,
-									column: loc.column
+									source: path.resolve(path.dirname(module.file), module.source.map.sources[0]),
+									line: l + 1,
+									column: match.index
 								};
-								mappings.set(name, mapping);
+								mappings.set(name, /** @type {Mapping} */ (mapping));
+							} else {
+								// TODO figure out how to repair sourcemaps in this case
 							}
+						} else {
+							// TODO how does this happen?
 						}
 					} else {
-						if (export_modifier) {
-							// remove `default` keyword
-							const default_modifier = node.modifiers?.find((node) => tsu.isDefaultKeyword(node));
-
-							if (default_modifier) {
-								let b = default_modifier.end;
-								const a = b - 7;
-								while (/\s/.test(module.dts[b])) b += 1;
-								result.remove(a, b);
-							}
-
-							if (identifier && name) {
-								const pos = identifier.getStart(module.ast);
-								const loc = module.locator(pos);
-
-								if (loc) {
-									// the sourcemaps generated by TypeScript are very inaccurate, borderline useless.
-									// we need to fix them up here. TODO is it only inaccurate in the JSDoc case?
-									const segments = module.source?.mappings?.[loc.line - 1];
-
-									if (module.source && segments) {
-										// find the segments immediately before and after the generated column
-										const index = segments.findIndex((segment) => segment[0] >= loc.column);
-
-										const a = segments[index - 1] ?? segments[0];
-										if (a) {
-											let l = /** @type {number} */ (a[2]);
-
-											const source_line = module.source.code.split('\n')[l];
-											const regex = new RegExp(`\\b${name}\\b`);
-											const match = regex.exec(source_line);
-
-											if (match) {
-												const mapping = {
-													source: path.resolve(
-														path.dirname(module.file),
-														module.source.map.sources[0]
-													),
-													line: l + 1,
-													column: match.index
-												};
-												mappings.set(name, /** @type {Mapping} */ (mapping));
-											} else {
-												// TODO figure out how to repair sourcemaps in this case
-											}
-										} else {
-											// TODO how does this happen?
-										}
-									} else {
-										const mapping = {
-											source: module.file,
-											line: loc.line,
-											column: loc.column
-										};
-										mappings.set(name, /** @type {Mapping} */ (mapping));
-									}
-								}
-							}
-
-							if (!exports.has(declaration.alias)) {
-								// remove all export keywords in the initial pass; reinstate as necessary later
-								let b = export_modifier.end;
-								const a = b - 6;
-								while (/\s/.test(module.dts[b])) b += 1;
-								result.remove(a, b);
-							}
-						} else if (declaration.exported) {
-							export_specifiers.push(declaration.alias);
-						}
+						mappings.set(name, {
+							source: module.file,
+							line: loc.line,
+							column: loc.column
+						});
 					}
-
-					if (declare_modifier) {
-						// i'm not sure why typescript turns `export function` in a .ts file to `export declare function`,
-						// but it's weird and we don't want it
-						let b = declare_modifier.end;
-						const a = b - 7;
-						while (/\s/.test(module.dts[b])) b += 1;
-						result.remove(a, b);
-					}
-
-					walk(node, (node) => {
-						if (ts.isPropertySignature(node) && is_internal(node) && options.stripInternal) {
-							result.remove(node.pos, node.end);
-							return false;
-						}
-
-						// We need to include the declarations because if references to them have changed, we need to update the declarations, too
-						if (is_reference(node, true)) {
-							const name = node.getText(module.ast);
-
-							const declaration = trace(module.file, name);
-
-							if (
-								declaration.alias !== name &&
-								declaration.alias &&
-								declaration.alias !== 'default'
-							) {
-								result.overwrite(node.getStart(module.ast), node.getEnd(), declaration.alias);
-							}
-						}
-
-						// `import('./foo').Foo` -> `Foo`
-						if (
-							ts.isImportTypeNode(node) &&
-							ts.isLiteralTypeNode(node.argument) &&
-							ts.isStringLiteral(node.argument.literal) &&
-							node.argument.literal.text.startsWith('.')
-						) {
-							// follow import
-							const resolved = resolve_dts(path.dirname(module.file), node.argument.literal.text);
-
-							// included.add(resolved);
-							// remove the `import(...)`
-							if (node.qualifier) {
-								const name = node.qualifier.getText(module.ast);
-								const declaration = trace(resolved, name);
-
-								result.overwrite(node.getStart(module.ast), node.qualifier.end, declaration.alias);
-							} else {
-								throw new Error('TODO');
-							}
-						}
-
-						clean_jsdoc(node, result);
-					});
 				}
+
+				walk(node, (node) => {
+					if (ts.isPropertySignature(node) && is_internal(node) && options.stripInternal) {
+						result.remove(node.pos, node.end);
+						return false;
+					}
+
+					// We need to include the declarations because if references to them have changed, we need to update the declarations, too
+					if (is_reference(node, true)) {
+						const name = node.getText(module.ast);
+
+						const declaration = trace(module.file, name);
+
+						if (
+							declaration.alias !== name &&
+							declaration.alias &&
+							declaration.alias !== 'default'
+						) {
+							result.overwrite(node.getStart(module.ast), node.getEnd(), declaration.alias);
+						}
+					}
+
+					// `import('./foo').Foo` -> `Foo`
+					if (
+						ts.isImportTypeNode(node) &&
+						ts.isLiteralTypeNode(node.argument) &&
+						ts.isStringLiteral(node.argument.literal) &&
+						node.argument.literal.text.startsWith('.')
+					) {
+						// follow import
+						const resolved = resolve_dts(path.dirname(module.file), node.argument.literal.text);
+
+						// included.add(resolved);
+						// remove the `import(...)`
+						if (node.qualifier) {
+							const name = node.qualifier.getText(module.ast);
+							const declaration = trace(resolved, name);
+
+							result.overwrite(node.getStart(module.ast), node.qualifier.end, declaration.alias);
+						} else {
+							throw new Error('TODO');
+						}
+					}
+
+					clean_jsdoc(node, result);
+				});
 			});
 
 			const mod = result
@@ -580,6 +532,7 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 				external: false,
 				included: true,
 				exported: false,
+				default: false,
 				name,
 				alias: name,
 				dependencies: [],
@@ -608,6 +561,7 @@ function create_external_declaration(binding, alias) {
 		name: binding.name,
 		alias: '',
 		exported: false,
+		default: false,
 		external: true,
 		included: false,
 		dependencies: [],

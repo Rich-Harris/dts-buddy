@@ -5,7 +5,7 @@
 		"add"
 	],
 	"sources": [
-		"../input/add.d.ts"
+		"../input/add.js"
 	],
 	"sourcesContent": [
 		null

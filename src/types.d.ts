@@ -12,6 +12,7 @@ interface Declaration {
 	name: string;
 	alias: string;
 	exported: boolean;
+	default: boolean;
 	external: boolean;
 	included: boolean;
 	dependencies: Reference[];

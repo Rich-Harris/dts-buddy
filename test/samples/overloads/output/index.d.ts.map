@@ -2,6 +2,8 @@
 	"version": 3,
 	"file": "index.d.ts",
 	"names": [
+		"Foo",
+		"Bar",
 		"baz"
 	],
 	"sources": [
@@ -10,5 +12,5 @@
 	"sourcesContent": [
 		null
 	],
-	"mappings": ";;;;;iBAIgBA,GAAGA;iBAAHA,GAAGA"
+	"mappings": ";WAAUA,GAAGA;;WACHC,GAAGA;;iBAGGC,GAAGA;iBAAHA,GAAGA"
 }

@@ -2,13 +2,13 @@
 	"version": 3,
 	"file": "index.d.ts",
 	"names": [
-		"MyMap"
+		"add"
 	],
 	"sources": [
-		"../input/index.js"
+		"../input/add.js"
 	],
 	"sourcesContent": [
 		null
 	],
-	"mappings": ";OAAMA,KAAKA"
+	"mappings": ";;;;yBAMgBA,GAAGA"
 }

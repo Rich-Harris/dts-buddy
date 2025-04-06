@@ -352,7 +352,7 @@ export function get_dts(file, created, resolve, options) {
 					module: file,
 					name,
 					alias: '',
-					exported: false,
+					export: false,
 					included: false,
 					external: false,
 					dependencies: [],

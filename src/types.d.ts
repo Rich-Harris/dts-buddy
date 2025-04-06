@@ -11,7 +11,13 @@ interface Declaration {
 	module: string;
 	name: string;
 	alias: string;
-	exported: boolean;
+	/**
+	 * Whether this declaration should have an `export` modifier in the output
+	 */
+	export: boolean;
+	/**
+	 * Whether this declaration should have a `default` modifier in the output
+	 */
 	default: boolean;
 	external: boolean;
 	included: boolean;

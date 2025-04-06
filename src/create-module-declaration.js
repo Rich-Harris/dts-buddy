@@ -178,11 +178,10 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 
 				if (name === 'default') {
 					declaration.default = true;
-					declaration.exported = true;
 				} else if (declaration.alias !== name) {
 					export_specifiers.push(`${declaration.alias} as ${name}`);
 				} else {
-					declaration.exported = true; // TODO can we just always mark it as exported?
+					declaration.export = true;
 				}
 			} else {
 				throw new Error('Something strange happened');
@@ -314,7 +313,7 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 
 				const modifiers = declaration.default
 					? 'export default '
-					: declaration.exported
+					: declaration.export
 					? 'export '
 					: '';
 
@@ -526,7 +525,7 @@ export function create_module_declaration(id, entry, created, resolve, options) 
 				module: '<builtin>',
 				external: false,
 				included: true,
-				exported: false,
+				export: false,
 				default: false,
 				name,
 				alias: name,
@@ -555,7 +554,7 @@ function create_external_declaration(binding, alias) {
 		module: binding.id,
 		name: binding.name,
 		alias: '',
-		exported: false,
+		export: false,
 		default: false,
 		external: true,
 		included: false,

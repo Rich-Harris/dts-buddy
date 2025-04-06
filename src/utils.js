@@ -353,6 +353,7 @@ export function get_dts(file, created, resolve, options) {
 					name,
 					alias: '',
 					export: false,
+					default: false,
 					included: false,
 					external: false,
 					dependencies: [],

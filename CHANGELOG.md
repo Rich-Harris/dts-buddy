@@ -1,5 +1,15 @@
 # dts-buddy changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- 87276ef: feat: support `export { ... as default } from ...`
+
+### Patch Changes
+
+- 87276ef: fix: improve sourcemaps
+
 ## 0.5.5
 
 ### Patch Changes

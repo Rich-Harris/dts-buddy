@@ -1,5 +1,12 @@
 # dts-buddy changelog
 
+## 0.6.1
+
+### Patch Changes
+
+- 25f4f9c: fix: follow directory imports
+- f372987: feat: support TypeScript 5.8
+
 ## 0.6.0
 
 ### Minor Changes

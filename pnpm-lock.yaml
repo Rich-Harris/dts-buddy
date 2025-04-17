@@ -31,7 +31,7 @@ importers:
         version: 0.2.10
       ts-api-utils:
         specifier: ^1.0.3
-        version: 1.0.3(typescript@5.7.3)
+        version: 1.0.3(typescript@5.8.3)
     devDependencies:
       '@changesets/cli':
         specifier: ^2.28.1
@@ -49,8 +49,8 @@ importers:
         specifier: ^7.5.4
         version: 7.5.4
       typescript:
-        specifier: ~5.7.3
-        version: 5.7.3
+        specifier: ~5.8.3
+        version: 5.8.3
       uvu:
         specifier: ^0.5.6
         version: 0.5.6
@@ -500,8 +500,8 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
-  typescript@5.7.3:
-    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
+  typescript@5.8.3:
+    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -1003,11 +1003,11 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
-  ts-api-utils@1.0.3(typescript@5.7.3):
+  ts-api-utils@1.0.3(typescript@5.8.3):
     dependencies:
-      typescript: 5.7.3
+      typescript: 5.8.3
 
-  typescript@5.7.3: {}
+  typescript@5.8.3: {}
 
   undici-types@5.25.3: {}
 

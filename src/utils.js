@@ -506,6 +506,7 @@ export function resolve_dts(from, to) {
 	if (file.endsWith('.js')) return file.replace(/\.js$/, '.d.ts');
 	if (file.endsWith('.jsx')) return file.replace(/\.jsx$/, '.d.ts');
 	if (file.endsWith('.tsx')) return file.replace(/\.tsx$/, '.d.ts');
+	if (fs.existsSync(file) && fs.statSync(file).isDirectory()) return file + '/index.d.ts';
 	return file + '.d.ts';
 }
 

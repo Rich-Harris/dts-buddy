@@ -569,6 +569,8 @@ export function is_reference(node, include_declarations = false) {
 
 		if (ts.isImportTypeNode(node.parent)) return false;
 		if (ts.isPropertySignature(node.parent)) return false;
+		if (ts.isGetAccessor(node.parent)) return false;
+		if (ts.isSetAccessor(node.parent)) return false;
 		if (ts.isParameter(node.parent)) return false;
 		if (ts.isMethodDeclaration(node.parent)) return false;
 		if (ts.isLabeledStatement(node.parent)) return false;

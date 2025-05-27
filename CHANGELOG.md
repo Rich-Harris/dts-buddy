@@ -1,5 +1,11 @@
 # dts-buddy changelog
 
+## 0.6.2
+
+### Patch Changes
+
+- dd96e67: fix: don't treat accessors as references
+
 ## 0.6.1
 
 ### Patch Changes

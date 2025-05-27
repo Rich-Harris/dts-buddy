@@ -4,18 +4,22 @@
 	"names": [
 		"X",
 		"error",
+		"Foo",
 		"Y",
-		"Namespace"
+		"Namespace",
+		"bar"
 	],
 	"sources": [
 		"../input/index.ts",
 		"../input/type.ts",
-		"../input/namespace.ts"
+		"../input/namespace.ts",
+		"../input/function.ts"
 	],
 	"sourcesContent": [
 		null,
 		null,
+		null,
 		null
 	],
-	"mappings": ";aAEYA,CAACA;iBACGC,KAAKA;aCDTC,CAACA;kBCFIC,SAASA"
+	"mappings": ";aAEYA,CAACA;iBACGC,KAAKA;kBAEJC,GAAGA;;;;aCHRC,CAACA;kBCFIC,SAASA;;;;;iBCAVC,GAAGA"
 }
